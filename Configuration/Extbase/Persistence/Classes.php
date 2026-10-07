@@ -1,7 +1,9 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
 
 use Qc\QcComments\Domain\Model\Comment;
+
 return [
     Comment::class => [
         'tableName' => 'tx_qccomments_domain_model_comment',
@@ -21,6 +23,6 @@ return [
         'fixed' => 'fixed',
         'fixed_by_user_uid' => 'fixedByUserUid',
         'fixed_date' => 'fixedDate',
-        'sys_language_uid' => 'languageField'
+        'sys_language_uid' => 'languageField',
     ],
 ];

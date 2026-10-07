@@ -43,14 +43,15 @@ class QcBackendModuleService
 
     protected TsConfiguration $tsConfiguration;
 
-    const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
+    public const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
 
     public function injectCommentRepository(CommentRepository $commentsRepository)
     {
         $this->commentsRepository = $commentsRepository;
     }
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->localizationUtility
             = GeneralUtility::makeInstance(LocalizationUtility::class);
         $this->backendSession
@@ -65,11 +66,10 @@ class QcBackendModuleService
      * @param Filter|null $filter
      * @return Filter|null
      */
-    public function processFilter(Filter $filter = null): ?Filter
+    public function processFilter(?Filter $filter = null): ?Filter
     {
         return null;
     }
-
 
     /**
      * @param Filter $filter
@@ -81,29 +81,27 @@ class QcBackendModuleService
     protected function getFilename(Filter $filter, $fileName, $dateFormat, $pageId): string
     {
         $format = $dateFormat;
-        if($filter->getDateRange() == 'userDefined'){
-            $from = date($format,strtotime($filter->getStartDate()));
-            $now = date($format,strtotime($filter->getEndDate()));
-        }
-        else{
+        if ($filter->getDateRange() == 'userDefined') {
+            $from = date($format, strtotime($filter->getStartDate()));
+            $now = date($format, strtotime($filter->getEndDate()));
+        } else {
             $now = date(
                 $format,
                 strtotime(
-                    '-'.$filter->getDateRange(),
+                    '-' . $filter->getDateRange(),
                     strtotime(date($format))
                 )
             );
         }
 
         return implode('-', array_filter([
-                $this->localizationUtility->translate(self::QC_LANG_FILE . $fileName),
-                $filter->getLang(),
-                'uid-' . $pageId,
-                $from ?? '',
-                $now,
-            ])) . '.xlsx';
+            $this->localizationUtility->translate(self::QC_LANG_FILE . $fileName),
+            $filter->getLang(),
+            'uid-' . $pageId,
+            $from ?? '',
+            $now,
+        ])) . '.xlsx';
     }
-
 
     /**
      * @param Filter $filter
@@ -119,31 +117,30 @@ class QcBackendModuleService
         string $fileName,
         array $headers,
         array $data
-    ): Response
-    {
+    ): Response {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle($fileName);
-        $sheet->fromArray($headers, NULL, 'A1');
+        $sheet->fromArray($headers, null, 'A1');
         $rowIndex = 2;
         foreach ($data as $row) {
-            $sheet->fromArray($row, NULL, 'A'.$rowIndex, true);
+            $sheet->fromArray($row, null, 'A' . $rowIndex, true);
             $rowIndex++;
         }
         $writer = new Xlsx($spreadsheet);
-         $dateFormat =$this->tsConfiguration->getDateFormat();
+        $dateFormat = $this->tsConfiguration->getDateFormat();
         $fileName = $this->getFilename($filter, $fileName, $dateFormat, $currentPageId);
-          header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-          header("Content-Disposition: attachment;filename=\"$fileName\"");
-          $writer->save("php://output");
-          return new Response(
-              'php://output',
-              200,
-              ['Content-Type' => 'application/vnd.ms-excel',
-                  'Content-Description' => 'File transfer',
-                  'Content-Disposition' => 'attachment; filename="' . $fileName
-              ]
-          );
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=\"$fileName\"");
+        $writer->save('php://output');
+        return new Response(
+            'php://output',
+            200,
+            ['Content-Type' => 'application/vnd.ms-excel',
+                'Content-Description' => 'File transfer',
+                'Content-Disposition' => 'attachment; filename="' . $fileName,
+            ]
+        );
     }
 
     /**
@@ -152,12 +149,12 @@ class QcBackendModuleService
      * @param int $currentPageId
      * @return int[]
      */
-    public function getPagesIds(Filter $filter,int $currentPageId): array
+    public function getPagesIds(Filter $filter, int $currentPageId): array
     {
         $this->commentsRepository->setRootId($currentPageId);
         $this->commentsRepository->setFilter($filter);
         $pagesData = $this->commentsRepository->getPageIdsList();
-        if($filter->getDepth() == 0){
+        if ($filter->getDepth() == 0) {
             $pagesData = [$currentPageId];
         }
         return $pagesData;
@@ -169,13 +166,14 @@ class QcBackendModuleService
      * @param bool $exportRequest
      * @return array
      */
-    public function statisticsDataFormatting($data, bool $exportRequest = false) : array{
+    public function statisticsDataFormatting($data, bool $exportRequest = false): array
+    {
         $rows = [];
         foreach ($data as $key => $item) {
             $item['total_neg'] = $item['total'] - $item['total_pos'];
             $total = $item['total_pos'];
-            $item['avg'] = $item['total'] > 0 ?
-                ' ' . number_format((($total) / $item['total']), 2) * 100 . ' %'
+            $item['avg'] = $item['total'] > 0
+                ? ' ' . number_format(($total / $item['total']) * 100, 2) . ' %'
                 : '0 %';
 
             $rows[$key] = $item;
@@ -183,19 +181,18 @@ class QcBackendModuleService
         return $rows;
     }
 
-
     /**
      * This function is used to mark the technical problem as solved (deleted = 1)
      * @param $recordUid
      * @return bool
      * @throws AspectNotFoundException
      */
-    public function deleteComment($recordUid) : bool
+    public function deleteComment($recordUid): bool
     {
         $context = GeneralUtility::makeInstance(Context::class);
         $userBeUid = $context->getPropertyFromAspect('backend.user', 'id');
         $comment = $this->commentsRepository->findByUid($recordUid);
-        if($comment != null){
+        if ($comment != null) {
             $comment->setDeletedByUserUid($userBeUid);
             $comment->setDeletingDate(date('Y-m-d H:i:s'));
             $comment->setDeleted(1);
@@ -205,20 +202,18 @@ class QcBackendModuleService
         return true;
     }
 
-
-
     /**
      * This function is used to mark the comment as (removed = 1)
      * @param $recordUid
      * @return bool
      * @throws AspectNotFoundException
      */
-    public function hideComment($recordUid) : bool
+    public function hideComment($recordUid): bool
     {
         $context = GeneralUtility::makeInstance(Context::class);
         $userBeUid = $context->getPropertyFromAspect('backend.user', 'id');
         $comment = $this->commentsRepository->findByUid($recordUid);
-        if($comment != null){
+        if ($comment != null) {
             $comment->setHiddenByUserUid($userBeUid);
             $comment->setHiddenDate(date('Y-m-d H:i:s'));
             $comment->setHiddenComment(1);
@@ -228,13 +223,13 @@ class QcBackendModuleService
         return true;
     }
 
-
-
-    public function getComment($commentUid){
+    public function getComment($commentUid)
+    {
         return $this->commentsRepository->findByUid($commentUid);
     }
 
-    public function updateComment($comment){
+    public function updateComment($comment)
+    {
         $this->commentsRepository->update($comment);
     }
     /**
@@ -264,7 +259,8 @@ class QcBackendModuleService
     /**
      * @return bool
      */
-    public function isRemoveButtonEnabled() : bool {
+    public function isRemoveButtonEnabled(): bool
+    {
         return $this->tsConfiguration->isRemoveButtonEnabled();
     }
 
@@ -272,7 +268,8 @@ class QcBackendModuleService
      * @param $section
      * @return bool
      */
-    public function isDeleteButtonEnabled($section) : bool {
+    public function isDeleteButtonEnabled($section): bool
+    {
         return $this->tsConfiguration->isDeleteButtonEnabled($section);
     }
 }

@@ -2,33 +2,33 @@
 
 namespace Qc\QcComments\Controller\Backend;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Qc\QcComments\Domain\Filter\TechnicalProblemsFilter;
 use Qc\QcComments\Service\CommentsTabService;
 use Qc\QcComments\Service\TechnicalProblemsTabService;
 use TYPO3\CMS\Core\Context\Exception\AspectNotFoundException;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
 
 class TechnicalProblemsBEController extends QcCommentsBEController
 {
-
     /**
      * @param TechnicalProblemsFilter|null $filter
      * @param string $operation
      * @return ResponseInterface
      */
-    public function technicalProblemsAction(TechnicalProblemsFilter $filter = null, string $operation = ''): ResponseInterface{
+    public function technicalProblemsAction(?TechnicalProblemsFilter $filter = null, string $operation = ''): ResponseInterface
+    {
 
-        $this->qcBeModuleService
-            = GeneralUtility::makeInstance(TechnicalProblemsTabService::class);
-        if($this->request->getArguments()['recordUidToRemove'] ?? false) {
-            $this->qcBeModuleService->technicalProblemFixed($this->request->getArguments()['recordUidToRemove']);
+        $technicalProblemsTabService = GeneralUtility::makeInstance(TechnicalProblemsTabService::class);
+        $this->qcBeModuleService = $technicalProblemsTabService;
+        if ($this->request->getArguments()['recordUidToRemove'] ?? false) {
+            $technicalProblemsTabService->markProblemAsFixed($this->request->getArguments()['recordUidToRemove']);
         }
 
-        if($operation === 'reset-filters'){
+        if ($operation === 'reset-filters') {
             $filter = new TechnicalProblemsFilter();
         }
 
@@ -36,8 +36,9 @@ class TechnicalProblemsBEController extends QcCommentsBEController
             'lastAction',
             [
                 'controllerName' => $this->controllerName,
-                'actionName' => 'technicalProblems'
-            ]);
+                'actionName' => 'technicalProblems',
+            ]
+        );
 
         $this->addMainMenu('technicalProblems');
 
@@ -46,25 +47,30 @@ class TechnicalProblemsBEController extends QcCommentsBEController
 
         if (!$this->root_id) {
             $this->moduleTemplate->assign('noPageSelected', true);
-        }
-        else {
+        } else {
             if ($filter) {
                 $this->qcBeModuleService->processFilter($filter);
                 $this->moduleTemplate->assign('filter', $filter);
             }
-            $data = $this->qcBeModuleService->getComments();
+            $data = $technicalProblemsTabService->getComments();
 
-           if($data['tooMuchResults'] === true){
+            if ($data['tooMuchResults'] === true) {
                 $message = $this->localizationUtility
-                    ->translate(self::QC_LANG_FILE . 'tooMuchResults',
-                        null, [$data['maxRecords']]);
+                    ->translate(
+                        self::QC_LANG_FILE . 'tooMuchResults',
+                        null,
+                        [$data['maxRecords']]
+                    );
                 $this->addFlashMessage($message, '', ContextualFeedbackSeverity::WARNING);
-           }
+            }
 
-            if($data['tooMuchPages'] === true){
+            if ($data['tooMuchPages'] === true) {
                 $message = $this->localizationUtility
-                    ->translate(self::QC_LANG_FILE . 'tooMuchPages',
-                        null, [$data['numberOfSubPages']]);
+                    ->translate(
+                        self::QC_LANG_FILE . 'tooMuchPages',
+                        null,
+                        [$data['numberOfSubPages']]
+                    );
                 $this->addFlashMessage($message, '', ContextualFeedbackSeverity::WARNING);
             }
             $this->moduleTemplate
@@ -75,8 +81,8 @@ class TechnicalProblemsBEController extends QcCommentsBEController
                      'comments' => $data['comments'],
                      'pagesId' => $data['pagesId'],
                      'currentPageId' => $data['currentPageId'],
-                     'isFixButtonEnabled' => $this->qcBeModuleService->isFixButtonEnabled(),
-                     'isDeleteButtonEnabled' => $this->qcBeModuleService->isDeleteButtonEnabled('technicalProblems')
+                     'isFixButtonEnabled' => $technicalProblemsTabService->isFixButtonEnabled(),
+                     'isDeleteButtonEnabled' => $this->qcBeModuleService->isDeleteButtonEnabled('technicalProblems'),
                  ]
              );
         }
@@ -95,7 +101,7 @@ class TechnicalProblemsBEController extends QcCommentsBEController
         $this->qcBeModuleService
             = GeneralUtility::makeInstance(TechnicalProblemsTabService::class);
         $recordUid = $this->request->getArguments()['technicalProblemUid'];
-        if($recordUid){
+        if ($recordUid) {
             $this->qcBeModuleService->markProblemAsFixed($recordUid);
         }
         return new ForwardResponse('technicalProblems');
@@ -111,7 +117,7 @@ class TechnicalProblemsBEController extends QcCommentsBEController
         $this->qcBeModuleService
             = GeneralUtility::makeInstance(CommentsTabService::class);
         $recordUid = $this->request->getArguments()['commentUid'];
-        if($recordUid){
+        if ($recordUid) {
             $this->qcBeModuleService->deleteComment($recordUid);
         }
         return new ForwardResponse('technicalProblems');
@@ -126,10 +132,10 @@ class TechnicalProblemsBEController extends QcCommentsBEController
     {
         $this->qcBeModuleService
             = GeneralUtility::makeInstance(TechnicalProblemsTabService::class);
-        $root_id = intval($request->getQueryParams()['parameters']['currentPageId']);
+        $root_id = (int)($request->getQueryParams()['parameters']['currentPageId']);
         $this->qcBeModuleService->setRootId($root_id);
         $filter = $this->qcBeModuleService->processFilter();
-        $currentPageId = intval($request->getQueryParams()['parameters']['currentPageId']);
+        $currentPageId = (int)($request->getQueryParams()['parameters']['currentPageId']);
         return $this->qcBeModuleService->exportTechnicalProblemsData($filter);
     }
 }

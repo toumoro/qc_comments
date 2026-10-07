@@ -3,12 +3,10 @@
       xmlns:qcComments="http://typo3.org/ns/Qc/QcComments/ViewHelpers"
       data-namespace-typo3-fluid="true">
 
-<f:variable name="pageUid" value="{v:page.info(field: 'uid')}"/>
 <f:variable name="checkBasPageMode" value="{modeBasPage -> qcComments:CheckPageMode(pageUid: pageUid)}"/>
 <f:variable name="doNotInsertPersonalData" value="{f:translate(key:'doNotInsertPersonalData')}" />
 <f:variable name="responseNoReceived" value="{f:translate(key:'responseNoReceived')}" />
 <f:variable name="commentSectionMandatoryField" value="true" />
-
 <f:if condition="{checkBasPageMode}">
     <div class="d-none" id="lang"
          data-ts="{v:page.language(languages: 'fr,en', pageUid: '0', normalWhenNoLanguage: 'fr')}"></div>
@@ -28,15 +26,13 @@
                                 <f:render partial="SpamShieldComponents/FormError" arguments="{_all}"/>
                             </f:then>
                             <f:else>
-                                <f:variable name="absUrl" value="{v:page.absoluteUrl()}"/>
-
                                 <f:form action="saveComment" object="{comment}" objectName="comment" id="QcCommentForm"
                                         class="comments-form">
                                     <f:form.hidden id="comment-type" property="useful" value="1"/>
                                     <f:form.hidden id="urlOrig" property="urlOrig" value="{absUrl}"/>
                                     <f:variable name="tt" value="1500"/>
                                     <f:form.hidden property="submittedFormUid" id="submittedFormUid"/>
-                                    <f:form.hidden property="uidOrig" value="{v:page.info(field: 'uid')}"/>
+                                    <f:form.hidden property="uidOrig" value="{pageUid}"/>
                                     <f:form.hidden property="_languageUid" value="{v:page.language()}"/>
                                     <div class="d-flex flex-row flex-wrap bd-highlight mb-3 useful-block ">
                                         <div class="w-100">
@@ -61,6 +57,8 @@
                                         <div class="d-none" id="tooManyChars" data-ts="{f:translate(key:'tooManyChars')}"></div>
                                         <div class="d-none" id="sitekey" data-ts="{recaptchaConfig.sitekey}"></div>
                                         <div class="d-none" id="enableRecaptcha" data-ts="{recaptchaConfig.enabled}"></div>
+                                        <div class="d-none" id="turnstileSitekey" data-ts="{turnstileConfig.sitekey}"></div>
+                                        <div class="d-none" id="enableTurnstile" data-ts="{turnstileConfig.enabled}"></div>
                                         <div class="d-none" id="pageUid" data-ts="{pageUid}"></div>
 
                                         <div class="d-none" id="reportingProblemMaxCharacters" data-ts="{config.reportProblem_section.maxCharacters}"></div>
@@ -137,22 +135,34 @@
 <f:section name="submit-button">
     <div
             class="submit-section {f:if(condition: '{submittedFormType} == 1 && {submittedFormUid} != 0 && {formUpdated} == false', then: '', else: 'd-none')}">
-        <f:if condition="{recaptchaConfig.enabled}">
+        <f:if condition="{turnstileConfig.enabled}">
             <f:then>
+                <div id="turnstileWidget" class="cf-turnstile" data-sitekey="{turnstileConfig.sitekey}"></div>
                 <input id="submitButton"
-                       data-sitekey="{recaptchaConfig.sitekey}"
-                       data-size="invisible"
-                       class="btn btn-primary displayBlock g-recaptcha submit-button"
+                       class="btn btn-primary displayBlock submit-button"
                        type="button"
                        onclick="setForm(this.form);"
                        value="{f:translate(key: 'submit')}"/>
             </f:then>
             <f:else>
-                <f:form.submit
-                        id="submitButton"
-                        value="{f:translate(key: 'submit')}"
-                        class="btn btn-primary displayBlock submit-button"
-                />
+                <f:if condition="{recaptchaConfig.enabled}">
+                    <f:then>
+                        <input id="submitButton"
+                               data-sitekey="{recaptchaConfig.sitekey}"
+                               data-size="invisible"
+                               class="btn btn-primary displayBlock g-recaptcha submit-button"
+                               type="button"
+                               onclick="setForm(this.form);"
+                               value="{f:translate(key: 'submit')}"/>
+                    </f:then>
+                    <f:else>
+                        <f:form.submit
+                                id="submitButton"
+                                value="{f:translate(key: 'submit')}"
+                                class="btn btn-primary displayBlock submit-button"
+                        />
+                    </f:else>
+                </f:if>
             </f:else>
         </f:if>
         <button type="button" class="btn btn-outline-warning displayBlock cancel-button" >Cancel</button>

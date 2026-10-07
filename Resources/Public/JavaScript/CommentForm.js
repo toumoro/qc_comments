@@ -84,6 +84,7 @@ $(document).ready(function(){
                     .getAttribute('data-ts') ?? 0;
             }
             addLimitMessage();
+            setTimeout(renderTurnstileWidgets, 0);
 
         })
 
@@ -214,9 +215,35 @@ $(document).ready(function(){
 
 
     $('#submitButton').on('click', function(event){
+        // Check if Turnstile is enabled
+        let isTurnstileEnabled = document.getElementById('enableTurnstile')?.getAttribute('data-ts') ?? '';
         // Check if reCAPTCHA is enabled
         let isRecaptchaEnabled = document.getElementById('enableRecaptcha')?.getAttribute('data-ts') ?? '';
-        if (isRecaptchaEnabled === '1') {
+        if (isTurnstileEnabled === '1') {
+            renderTurnstileWidgets();
+            // Get the Turnstile widget ID
+            let widgetId = $("#QcCommentForm").find('.cf-turnstile').data('widget-id');
+
+            if (typeof widgetId === 'undefined') {
+                console.warn("Turnstile widget ID is undefined.");
+                return; // Stop further execution if widget ID is not found
+            }
+
+            // Check if the Turnstile object exists
+            if (typeof turnstile === 'object') {
+                // If the Turnstile response is empty, execute the Turnstile challenge
+                if (!turnstile.getResponse(widgetId) || turnstile.getResponse(widgetId) !== '') {
+                    event.preventDefault(); // Prevent the default action
+                    turnstile.execute(widgetId); // Trigger the Turnstile challenge
+                    isPositifCommentSubmitted = false;
+                    onTurnstileCompleted()
+                }
+            } else {
+                console.error("Turnstile object is not available.");
+                event.preventDefault(); // Prevent the default action since Turnstile is required
+                return;
+            }
+        } else if (isRecaptchaEnabled === '1') {
             // Get the reCAPTCHA widget ID
             let widgetId = $("#QcCommentForm").find('.g-recaptcha').data('widget-id');
 
@@ -273,6 +300,23 @@ $(document).ready(function(){
             }
         }
         grecaptcha.reset();
+    }
+    function onTurnstileCompleted () {
+        // Trigger the validation for Qc Comments form
+        if(isPositifCommentSubmitted === false){
+            commentValidation();
+        }
+        // Prevent multiple submissions
+        if (submitAmount === 0 && formError === false) {
+            if(isPositifCommentSubmitted === false){
+                $('#QcCommentForm').trigger('submit', [true]);
+                submitAmount++;
+            }
+            else{
+                positifFormUpdate = true;
+            }
+        }
+        turnstile.reset();
     }
 
     $('.cancel-button').on('click', function(event){
@@ -336,6 +380,7 @@ $(document).ready(function(){
         $('.comment-textarea').hide()
         isPositifCommentSubmitted = true;
         positifFormUpdate = true;
+        setTimeout(renderTurnstileWidgets, 0);
 
     })
 })
@@ -352,6 +397,56 @@ var onloadCallback = function () {
         });
     });
 
+};
+let onTurnstileCompleted;
+let turnstileApiReady = false;
+var onloadTurnstileCallback = function () {
+    // Only marks the API as ready to call .render() on. The actual render() call
+    // is deliberately NOT attempted here: at script-load time the widget's
+    // container is still hidden (d-none) and/or the page's own CSS may not be
+    // fully applied yet, and Cloudflare's SDK fails outright ("Unable to find a
+    // container") if render() is attempted too early - unlike reCAPTCHA's
+    // invisible badge, which only binds to a click and tolerates this. Rendering
+    // is instead deferred until the user actually reveals the form (see
+    // renderTurnstileWidgets() calls in the button click handlers below).
+    turnstileApiReady = true;
+};
+function renderTurnstileWidgets() {
+    if (!turnstileApiReady || typeof turnstile !== 'object') {
+        return;
+    }
+    $(".cf-turnstile").each(function () {
+        let $turnstileElement = $(this);
+        let elementId = $turnstileElement.attr('id');
+        if ($turnstileElement.data('widget-id') !== undefined
+            || $turnstileElement.is(':hidden')
+            || !document.getElementById(elementId)) {
+            return;
+        }
+        let key = $turnstileElement.attr('data-sitekey');
+        try {
+            // Turnstile returns its own opaque widget id - unlike grecaptcha, it is
+            // not a sequential index, so it must be captured from the return value.
+            // Also, unlike grecaptcha.render(), turnstile.render() does not accept a
+            // bare element id string as the container - it treats a string argument
+            // as a CSS selector (so a bare id is read as a tag-name selector and never
+            // matches). Pass the actual DOM element instead.
+            let widgetId = turnstile.render(this, {
+                'sitekey': key,
+                'execution': 'execute',
+                // 'execution: execute' only controls *when* the challenge runs (on our
+                // .execute() call), not whether the widget box is shown - appearance
+                // defaults to 'always', which renders a visible (blank, until executed)
+                // box immediately. Keep it fully invisible until execute(), matching
+                // reCAPTCHA's invisible badge.
+                'appearance': 'execute',
+                'callback': onTurnstileCompleted
+            });
+            $turnstileElement.data('widget-id', widgetId);
+        } catch (e) {
+            console.error('Turnstile render failed:', e);
+        }
+    });
 };
 // Set the selected form
 function setForm(form) {

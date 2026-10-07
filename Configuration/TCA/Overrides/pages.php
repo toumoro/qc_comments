@@ -40,6 +40,8 @@ call_user_func(function () {
         ],
     ];
     ExtensionManagementUtility::addTCAcolumns('pages', $newFields);
-    ExtensionManagementUtility::addToAllTCAtypes('pages', 'tx_comments_form_mode'
+    ExtensionManagementUtility::addToAllTCAtypes(
+        'pages',
+        'tx_comments_form_mode'
     );
 });

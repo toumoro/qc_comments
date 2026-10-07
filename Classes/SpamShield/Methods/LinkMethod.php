@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Methods;
+
 /***
  *
  * This file is part of Qc Comments project.

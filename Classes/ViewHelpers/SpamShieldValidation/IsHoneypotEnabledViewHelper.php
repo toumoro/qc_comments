@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\ViewHelpers\SpamShieldValidation;
 
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
@@ -21,6 +22,5 @@ class IsHoneypotEnabledViewHelper extends AbstractViewHelper
         $settings = $configurationService->getTypoScriptSettings();
         return $configurationService->isValidationEnabled($settings, HoneyPotMethod::class);
     }
-
 
 }

@@ -3,20 +3,18 @@
 namespace Qc\QcComments\Domain\Filter;
 
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 class HiddenCommentsFilter extends Filter
 {
-    protected const KEY_COMMENT_REASON= "commentReason";
+    protected const KEY_COMMENT_REASON = 'commentReason';
 
     /**
      * @var string
      */
-    protected string $commentReason = "%";
+    protected string $commentReason = '%';
 
     protected TyposcriptConfiguration $typoscriptConfiguration;
-
 
     /**
      * @param string $lang
@@ -33,11 +31,11 @@ class HiddenCommentsFilter extends Filter
         string $lang = '',
         string $startDate = '',
         string $endDate = '',
-        string $dateRange ='1 day',
+        string $dateRange = '1 day',
         int $depth = 1,
         bool $includeEmptyPages = false,
         string $useful = '%',
-        string $commentReason = "%"
+        string $commentReason = '%'
     ) {
         parent::__construct(
             $lang,
@@ -78,7 +76,7 @@ class HiddenCommentsFilter extends Filter
         return array_merge(
             parent::toArray(),
             [
-                self::KEY_COMMENT_REASON => $this->getCommentReason() ?? "%"
+                self::KEY_COMMENT_REASON => $this->getCommentReason(),
             ]
         );
     }
@@ -86,7 +84,7 @@ class HiddenCommentsFilter extends Filter
     /**
      * This function is used to map array to filter object
      * @param array $values
-     * @return CommentsFilter
+     * @return HiddenCommentsFilter
      */
     public static function getInstanceFromArray(array $values): HiddenCommentsFilter
     {
@@ -98,10 +96,9 @@ class HiddenCommentsFilter extends Filter
             $values[parent::KEY_DEPTH],
             $values[parent::KEY_INCLUDE_EMPTY_PAGES],
             $values[parent::KEY_USEFUL],
-            $values[self::KEY_COMMENT_REASON] ?? "%",
+            $values[self::KEY_COMMENT_REASON] ?? '%',
         );
     }
-
 
     /**
      * @return string
@@ -120,13 +117,12 @@ class HiddenCommentsFilter extends Filter
     }
 
     /**
-     *
      * @param string $useful
      */
     public function setUseful(string $useful): void
     {
         //check if the useful filter changed to "Negative comment" we set default value for
-        if($useful == '0' && $useful != $this->getUseful()){
+        if ($useful == '0' && $useful != $this->getUseful()) {
             $this->setCommentReason('%');
         }
         $this->useful = $useful == '' ? '%' : $useful;
@@ -137,10 +133,10 @@ class HiddenCommentsFilter extends Filter
      */
     public function getUsabilityCriteria(): string
     {
-        $criteria =  " useful like '".$this->getUseful()."'and useful not like 'NA'";
+        $criteria =  " useful like '" . $this->getUseful() . "'and useful not like 'NA'";
         // we apply the reason only if the comment is negative
-        if($this->getCommentReason() != "%" && ($this->getUseful() == '0' || $this->getUseful() == '1')){
-            $criteria .= "AND reason_short_label like '".$this->getCommentReason()."'";
+        if ($this->getCommentReason() != '%' && ($this->getUseful() == '0' || $this->getUseful() == '1')) {
+            $criteria .= "AND reason_short_label like '" . $this->getCommentReason() . "'";
         }
         return $criteria;
     }
@@ -148,7 +144,8 @@ class HiddenCommentsFilter extends Filter
     /**
      * @return string
      */
-    public function getRecordVisibility() :string {
+    public function getRecordVisibility(): string
+    {
         return ' and hidden_comment = 1';
     }
 }

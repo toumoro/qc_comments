@@ -67,7 +67,6 @@ class Comment extends AbstractEntity
      */
     protected string $reasonShortLabel = '';
 
-
     protected int $deletedByUserUid = 0;
 
     /**
@@ -113,7 +112,6 @@ class Comment extends AbstractEntity
 
     protected int $hiddenComment = 0;
 
-
     protected ?int $_languageUid = 0;
 
     /**
@@ -126,7 +124,6 @@ class Comment extends AbstractEntity
 
     /**
      * @param int $languageUid
-     * @return void
      */
     public function setLanguageUid(int $languageUid): void
     {
@@ -160,8 +157,6 @@ class Comment extends AbstractEntity
         $this->hiddenDate = $hiddenDate;
     }
 
-
-
     /**
      * @param int $hiddenComment
      */
@@ -181,7 +176,7 @@ class Comment extends AbstractEntity
     }
 
     /**
-     * @return int
+     * @return string
      */
     public function getUseful(): string
     {
@@ -307,11 +302,11 @@ class Comment extends AbstractEntity
         $this->reasonCode = $reasonCode;
     }
     /**
-     * @param string $reasonShorLabel
+     * @param string $reasonShortLabel
      */
     public function setReasonShortLabel(string $reasonShortLabel): void
     {
-        $this->reasonShortLabel = str_replace("'", "’", $reasonShortLabel);
+        $this->reasonShortLabel = str_replace("'", '’', $reasonShortLabel);
     }
 
     /**
@@ -319,7 +314,7 @@ class Comment extends AbstractEntity
      */
     public function setReasonLongLabel(string $reasonLongLabel): void
     {
-        $this->reasonLongLabel = str_replace("'", "’", $reasonLongLabel);
+        $this->reasonLongLabel = str_replace("'", '’', $reasonLongLabel);
     }
 
     /**
@@ -327,7 +322,7 @@ class Comment extends AbstractEntity
      */
     public function getReasonLongLabel(): string
     {
-        return str_replace("'", "’", $this->reasonLongLabel);
+        return str_replace("'", '’', $this->reasonLongLabel);
     }
 
     /**
@@ -335,7 +330,7 @@ class Comment extends AbstractEntity
      */
     public function getReasonShortLabel(): string
     {
-        return str_replace("'", "’", $this->reasonShortLabel);
+        return str_replace("'", '’', $this->reasonShortLabel);
     }
 
     /**
@@ -353,7 +348,6 @@ class Comment extends AbstractEntity
     {
         return $this->submittedFormUid;
     }
-
 
     /**
      * @return string
@@ -416,6 +410,5 @@ class Comment extends AbstractEntity
     {
         $this->fixedDate = $fixedDate;
     }
-
 
 }

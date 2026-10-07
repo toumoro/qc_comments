@@ -13,9 +13,9 @@ namespace Qc\QcComments\Service;
  *
  ***/
 
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Exception;
-use Psr\Http\Message\ResponseInterface;
+use Doctrine\DBAL\Exception as DBALException;
+use Psr\Http\Message\ServerRequestInterface;
 use Qc\QcComments\Domain\Filter\CommentsFilter;
 use Qc\QcComments\Domain\Filter\Filter;
 use TYPO3\CMS\Core\Http\Response;
@@ -32,7 +32,7 @@ class CommentsTabService extends QcBackendModuleService
     public function __construct()
     {
         parent::__construct();
-        $this->showCommentsForHiddenPage = $this->tsConfiguration->showForHiddenPage("comments");
+        $this->showCommentsForHiddenPage = $this->tsConfiguration->showForHiddenPage('comments');
     }
 
     /**
@@ -41,21 +41,21 @@ class CommentsTabService extends QcBackendModuleService
      * @throws Exception
      * @throws DBALException
      */
-    public function getComments(Filter $filter = null): array
+    public function getComments(?Filter $filter = null): array
     {
         $pages_ids = $this->commentsRepository->getPageIdsList();
 
-        $maxRecords = $this->tsConfiguration->getMaxRecords("comments");
+        $maxRecords = $this->tsConfiguration->getMaxRecords('comments');
 
-        $numberOfSubPages = $this->tsConfiguration->getNumberOfSubPages("comments");
+        $numberOfSubPages = $this->tsConfiguration->getNumberOfSubPages('comments');
 
-        $orderType = $this->tsConfiguration->getOrderType("comments");
+        $orderType = $this->tsConfiguration->getOrderType('comments');
 
-        $tooMuchPages = count($pages_ids) > intval($numberOfSubPages);
+        $tooMuchPages = count($pages_ids) > (int)$numberOfSubPages;
         $pages_ids = array_slice(
             $pages_ids,
             0,
-            $numberOfSubPages
+            (int)$numberOfSubPages
         );
 
         $records = $this->commentsRepository
@@ -69,7 +69,7 @@ class CommentsTabService extends QcBackendModuleService
         $commentsWithStats = $this->commentsRepository
             ->getStatistics($pages_ids, $maxRecords, $this->showCommentsForHiddenPage, $commentsRecords);
         $comments = $this->statisticsDataFormatting($commentsWithStats);
-        $tooMuchResults = $records['count'] > intval($maxRecords);
+        $tooMuchResults = $records['count'] > (int)$maxRecords;
 
         $pagesId = $pages_ids;
         $currentPageId = $this->root_id;
@@ -93,11 +93,11 @@ class CommentsTabService extends QcBackendModuleService
      * @param ServerRequestInterface $request
      * @return Filter
      */
-    public function getFilterFromRequest($request): Filter
+    public function getFilterFromRequest(ServerRequestInterface $request): Filter
     {
         $filter = new CommentsFilter();
         $filter->setLang($request->getQueryParams()['parameters']['lang']);
-        $filter->setDepth(intval($request->getQueryParams()['parameters']['depth']));
+        $filter->setDepth((int)($request->getQueryParams()['parameters']['depth']));
         $filter->setDateRange($request->getQueryParams()['parameters']['selectDateRange']);
         $filter->setStartDate($request->getQueryParams()['parameters']['startDate'] ?? '');
         $filter->setEndDate($request->getQueryParams()['parameters']['endDate'] ?? '');
@@ -114,33 +114,31 @@ class CommentsTabService extends QcBackendModuleService
      * @param Filter|null $filter
      * @return Filter|null
      */
-    public function processFilter(Filter $filter = null): ?Filter
+    public function processFilter(?Filter $filter = null): ?Filter
     {
-       // Add filtering to records
-          if ($filter === null) {
-              // Get filter from session if available
-              $filter = $this->backendSession->get('commentsFilter');
-              if ($filter == null) {
-                  $filter = new CommentsFilter();
-              }
-          } else {
-              if ($filter->getDateRange() != 'userDefined') {
-                  $filter->setStartDate(null);
-                  $filter->setEndDate(null);
-              }
+        // Add filtering to records
+        if ($filter === null) {
+            // Get filter from session if available
+            $filter = $this->backendSession->get('commentsFilter');
+            if ($filter == null) {
+                $filter = new CommentsFilter();
+            }
+        } else {
+            if ($filter->getDateRange() != 'userDefined') {
+                $filter->setStartDate(null);
+                $filter->setEndDate(null);
+            }
 
-              $this->backendSession->store('commentsFilter', $filter);
-          }
-          $this->commentsRepository->setFilter($filter);
-          $this->commentsRepository->setRootId($this->root_id);
-          return $filter;
+            $this->backendSession->store('commentsFilter', $filter);
+        }
+        $this->commentsRepository->setFilter($filter);
+        $this->commentsRepository->setRootId($this->root_id);
+        return $filter;
     }
-
-
 
     /**
      * This function is used to return the headers used in the exported file and the BE module table
-     * @param false $headersForExport
+     * @param bool $headersForExport
      * @return array
      */
     protected function getHeaders(bool $headersForExport = false): array
@@ -148,12 +146,11 @@ class CommentsTabService extends QcBackendModuleService
         $headers = [];
 
         if ($headersForExport) {
-            foreach (['page_uid', 'page_title','date_hour','reason', 'comment','url_orig','useful'] as $col) {
+            foreach (['page_uid', 'page_title', 'date_hour', 'reason', 'comment', 'url_orig', 'useful'] as $col) {
                 $headers[$col] = $this->localizationUtility
                     ->translate(self::QC_LANG_FILE . 'comments.h.' . $col);
             }
-        }
-        else{
+        } else {
             foreach (['date_hour', 'comment', 'useful', 'comment_option', ''] as $col) {
                 $headers[$col] = $this->localizationUtility
                     ->translate(self::QC_LANG_FILE . 'comments.h.' . $col);
@@ -164,10 +161,9 @@ class CommentsTabService extends QcBackendModuleService
 
     /**
      * @param Filter $filter
-     * @param int $currentPageId
      * @return Response
      */
-    public function exportCommentsData(Filter  $filter): Response
+    public function exportCommentsData(Filter $filter): Response
     {
         $pagesIds = $this->getPagesIds($filter, $this->root_id);
 
@@ -175,7 +171,8 @@ class CommentsTabService extends QcBackendModuleService
             ->getComments(
                 $pagesIds,
                 false,
-                self::DEFAULT_ORDER_TYPES, $this->showCommentsForHiddenPage
+                self::DEFAULT_ORDER_TYPES,
+                $this->showCommentsForHiddenPage
             )['rows'];
 
         $headers = $this->getHeaders(true);
@@ -183,12 +180,12 @@ class CommentsTabService extends QcBackendModuleService
         $i = 0;
 
         foreach ($data as $row) {
-            foreach ($row['records'] as $item){
+            foreach ($row['records'] as $item) {
                 $items[$i]['page_uid'] = $item['uid'];
                 $items[$i]['page_title'] = $item['title'];
                 $items[$i]['date_hour'] = $item['date_hour'];
                 $items[$i]['reason'] = $item['reason_short_label'];
-                $comment = str_replace("\r", ' ', $item['comment']) ;
+                $comment = str_replace("\r", ' ', $item['comment']);
                 $comment = str_replace("\t", ' ', $comment);
                 $items[$i]['comment'] = $comment;
                 // Do not export the url parameters
@@ -198,7 +195,7 @@ class CommentsTabService extends QcBackendModuleService
             }
         }
 
-        return parent::export($filter,$this->root_id,'comments', $headers, $items);
+        return parent::export($filter, $this->root_id, 'comments', $headers, $items);
     }
 
 }

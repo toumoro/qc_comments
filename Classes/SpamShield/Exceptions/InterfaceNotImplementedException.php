@@ -1,6 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Exceptions;
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -11,7 +14,4 @@ namespace Qc\QcComments\SpamShield\Exceptions;
  *  (c) 2023 <techno@quebec.ca>
  *
  ***/
-class InterfaceNotImplementedException extends \Exception
-{
-
-}
+class InterfaceNotImplementedException extends \Exception {}

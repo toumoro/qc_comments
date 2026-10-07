@@ -9,7 +9,7 @@ return [
         'transOrigPointerField' => 'l10n_parent',
         'transOrigDiffSourceField' => 'l10n_diffsource',
         'typeicon_classes' => [
-            'default' => 'qc_comments'
+            'default' => 'qc_comments',
         ],
         'delete' => 'deleted',
         'label' => 'comment',
@@ -72,7 +72,7 @@ return [
         'starttime' => [
             'exclude' => true,
             'behaviour' => [
-                'allowLanguageSynchronization' => true
+                'allowLanguageSynchronization' => true,
             ],
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.starttime',
             'config' => [
@@ -83,7 +83,7 @@ return [
         'endtime' => [
             'exclude' => true,
             'behaviour' => [
-                'allowLanguageSynchronization' => true
+                'allowLanguageSynchronization' => true,
             ],
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.endtime',
             'config' => [

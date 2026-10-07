@@ -21,6 +21,7 @@ use Qc\QcComments\SpamShield\SpamShieldValidator;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\Exception\AspectNotFoundException;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -31,7 +32,6 @@ use TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
-use TYPO3\CMS\Core\Http\JsonResponse;
 
 // FrontEnd Controller
 class CommentsController extends ActionController
@@ -44,7 +44,7 @@ class CommentsController extends ActionController
     /**
      * @var TyposcriptConfiguration
      */
-    protected TyposcriptConfiguration  $typoscriptConfiguration;
+    protected TyposcriptConfiguration $typoscriptConfiguration;
 
     /**
      * @var LocalizationUtility
@@ -75,15 +75,14 @@ class CommentsController extends ActionController
 
     public function __construct(
     ) {
-        $this->localizationUtility =
-            GeneralUtility::makeInstance(LocalizationUtility::class);
+        $this->localizationUtility
+            = GeneralUtility::makeInstance(LocalizationUtility::class);
         $this->typoscriptConfiguration = new TyposcriptConfiguration();
         $this->isSpamShieldEnabled = $this->typoscriptConfiguration->isSpamShieldEnabled();
         $this->context = GeneralUtility::makeInstance(Context::class);
         $this->currentLanguage = $this->getCurrentLanguage();
         $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
     }
-
 
     /**
      * This function is used to render the comments form
@@ -109,23 +108,30 @@ class CommentsController extends ActionController
             'sitekey' => $this->typoscriptConfiguration->getRecaptchaSitekey(),
             'secret' => $this->typoscriptConfiguration->getRecaptchaSecretKey(),
         ];
+        $turnstileConfig = [
+            'enabled' => $this->typoscriptConfiguration->isTurnstileEnabled(),
+            'sitekey' => $this->typoscriptConfiguration->getTurnstileSitekey(),
+            'secret' => $this->typoscriptConfiguration->getTurnstileSecretKey(),
+        ];
         $reasonOptions = $this->typoscriptConfiguration->getReasonOptions($this->currentLanguage);
         $this->view->assignMultiple([
             'submitted' => $this->request->getArguments()['submitted'] ?? false,
-            'submittedFormUid' => strval($this->request->getArguments()['formUid'] ?? '') ?? '',
+            'submittedFormUid' => (string)($this->request->getArguments()['formUid'] ?? ''),
             'submittedFormType' => $this->request->getArguments()['useful'] ?? null,
             'formUpdated' => $this->request->getArguments()['formUpdated'] ?? null,
             'validationResults' => $this->request->getArguments()['validationResults'] ?? '',
             'comment' => new Comment(),
             'config' => $commentLengthconfig,
             'recaptchaConfig' => $recaptchaConfig,
+            'turnstileConfig' => $turnstileConfig,
             'isSpamShieldEnabled' => $this->isSpamShieldEnabled,
-            'reasonOptions' => $reasonOptions
+            'pageUid' => $this->request->getAttribute('routing')?->getPageId(),
+            'absUrl' => $this->request->getAttribute('normalizedParams')?->getRequestUrl(),
+            'reasonOptions' => $reasonOptions,
         ]);
 
         return $this->htmlResponse();
     }
-
 
     /**
      * This function is used to save comment
@@ -134,40 +140,45 @@ class CommentsController extends ActionController
      * @throws IllegalObjectTypeException
      * @throws UnknownObjectException
      */
-    public function saveCommentAction(Comment $comment = null):ResponseInterface
+    public function saveCommentAction(?Comment $comment = null): ResponseInterface
     {
-        if($this->isSpamShieldEnabled){
+        if ($this->isSpamShieldEnabled) {
             $validator = GeneralUtility::makeInstance(SpamShieldValidator::class);
             $validationResults = $validator->validate($comment);
             $spamErrors = $validationResults->hasErrors();
-            if($spamErrors){
+            if ($spamErrors) {
                 return (
                     new ForwardResponse('show'))
                         ->withArguments([
                             'submitted' => false,
-                            'validationResults' => $validationResults
+                            'validationResults' => $validationResults,
                         ]);
             }
         }
         if ($comment) {
             $commentType = '';
-            switch ($comment->getUseful()){
-                case '0' : $commentType = 'negative_section';break;
-                case '1' : $commentType = 'positive_section';break;
-                case 'NA' : $commentType = 'reportProblem_section';break;
+            switch ($comment->getUseful()) {
+                case '0': $commentType = 'negative_section';
+                    break;
+                case '1': $commentType = 'positive_section';
+                    break;
+                case 'NA': $commentType = 'reportProblem_section';
+                    break;
             }
-            $selectedReasonOption = $this->getSelectedReasonOption($commentType,$comment->getReasonCode());
+            $selectedReasonOption = $this->getSelectedReasonOption($commentType, $comment->getReasonCode());
 
             $comment->setReasonShortLabel($selectedReasonOption['short_label'] ?? '');
             $comment->setReasonLongLabel($selectedReasonOption['long_label'] ?? '');
             $pageUid = $comment->getUidOrig();
             $comment->setUidPermsGroup(
                 BackendUtility::getRecord(
-                'pages', $pageUid,
-                'perms_groupid',
-                "uid = $pageUid")['perms_groupid']
+                    'pages',
+                    $pageUid,
+                    'perms_groupid',
+                    "uid = $pageUid"
+                )['perms_groupid']
             );
-            if($this->typoscriptConfiguration->isAnonymizeCommentEnabled()){
+            if ($this->typoscriptConfiguration->isAnonymizeCommentEnabled()) {
                 $comment->setComment(
                     $this->anonymizeComment(
                         $comment->getComment()
@@ -177,7 +188,8 @@ class CommentsController extends ActionController
 
             $comment->setComment(
                 substr(
-                    $comment->getComment(), 0,
+                    $comment->getComment(),
+                    0,
                     $this->typoscriptConfiguration->getCommentsMaxMinLength($commentType, 'maxCharacters')
                 )
             );
@@ -185,38 +197,36 @@ class CommentsController extends ActionController
 
             $comment->setDateHour(date('Y-m-d H:i:s'));
 
-            if($comment->getSubmittedFormUid() != '0'){
-                $existingComment= $this->commentsRepository->findByUid(intval($comment->getSubmittedFormUid()));
-                if($existingComment){
+            if ($comment->getSubmittedFormUid() != '0') {
+                $existingComment = $this->commentsRepository->findByUid((int)($comment->getSubmittedFormUid()));
+                if ($existingComment) {
                     $existingComment->setComment($comment->getComment());
                     $existingComment->setReasonShortLabel($comment->getReasonShortLabel());
                     $existingComment->setReasonLongLabel($comment->getReasonLongLabel());
                     $existingComment->setReasonCode($comment->getReasonCode());
                     $existingComment->setLanguageUid($comment->getLanguageUid());
                     $this->commentsRepository->update($existingComment);
-                }
-                else{
+                } else {
                     $this->commentsRepository->add($comment);
                     $this->persistenceManager->persistAll();
                 }
                 $formUpdated = true;
-            }else{
+            } else {
                 $this->commentsRepository->add($comment);
                 $this->persistenceManager->persistAll();
             }
-            $submittedFormUid = strval($comment->getUid());
+            $submittedFormUid = (string)($comment->getUid());
             return $this->redirect('show', null, null, [
                 'submitted' => true,
                 'formUid' => $submittedFormUid,
                 'useful' => $comment->getUseful(),
-                'formUpdated' => $formUpdated
+                'formUpdated' => $formUpdated,
             ]);
         }
-        else{
-            return $this->redirect('show', null, null, [
-                'submitted' => false
-            ]);
-        }
+
+        return $this->redirect('show', null, null, [
+            'submitted' => false,
+        ]);
 
     }
 
@@ -226,7 +236,8 @@ class CommentsController extends ActionController
      * @param $reason_code // Option code
      * @return array
      */
-    public function getSelectedReasonOption($reasonType, $reason_code) : array {
+    public function getSelectedReasonOption($reasonType, $reason_code): array
+    {
         $options = $this->typoscriptConfiguration->getReasonOptions($this->currentLanguage)[$reasonType] ?? [];
         foreach ($options as $item) {
             if ($item['code'] === $reason_code) {
@@ -239,7 +250,8 @@ class CommentsController extends ActionController
     /**
      * @throws AspectNotFoundException
      */
-    public function getCurrentLanguage() : string {
+    public function getCurrentLanguage(): string
+    {
         return $this->getSiteLanguage()->getLocale()->getLanguageCode();
     }
 
@@ -247,7 +259,7 @@ class CommentsController extends ActionController
      * @return SiteLanguage
      * @throws \TYPO3\CMS\Core\Exception\SiteNotFoundException
      */
-    protected  function getSiteLanguage()
+    protected function getSiteLanguage()
     {
         if (($request = $GLOBALS['TYPO3_REQUEST'] ?? false)
             && ($siteLanguage = $request->getAttribute('language') ?? false)) {
@@ -256,7 +268,7 @@ class CommentsController extends ActionController
         return GeneralUtility::makeInstance(SiteFinder::class)
             ->getSiteByRootPageId(1)
             ->getDefaultLanguage()
-            ;
+        ;
     }
 
     /**
@@ -264,17 +276,16 @@ class CommentsController extends ActionController
      * @param $comment
      * @return string
      */
-    function anonymizeComment($comment): string
+    public function anonymizeComment($comment): string
     {
         $pattern = $this->typoscriptConfiguration->getAnonymizationCommentPattern();
         $anonymizeMode = $this->typoscriptConfiguration->getAnonymizationMode();
-        if($anonymizeMode == 0){
+        if ($anonymizeMode == 0) {
             return preg_replace_callback($pattern, function ($match) {
                 $anonymatInfo = substr($match[0], strlen($match[0]) - 4);
-                return ' [...'.$anonymatInfo.'] ';
+                return ' [...' . $anonymatInfo . '] ';
             }, $comment);
-        }
-        else if($anonymizeMode == 1){
+        } elseif ($anonymizeMode == 1) {
             $emailReplacement = $this->typoscriptConfiguration->getAnonymizedEmailReplacement();
             $numberReplacement = $this->typoscriptConfiguration->getAnonymizedNumberReplacement();
 
@@ -282,10 +293,10 @@ class CommentsController extends ActionController
                 $value = $match[0];
                 // If it's an email
                 if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    return  ' '.$emailReplacement.' ';
+                    return  ' ' . $emailReplacement . ' ';
                 }
                 // Otherwise assume it's a number
-                return ' '.$numberReplacement.' ';
+                return ' ' . $numberReplacement . ' ';
             }, $comment);
         }
         return $comment;
@@ -293,8 +304,7 @@ class CommentsController extends ActionController
 
     /**
      * @return JsonResponse
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws Exception
+     * @throws \Doctrine\DBAL\Exception
      * @throws IllegalObjectTypeException
      */
     public function savePositifCommentAction()

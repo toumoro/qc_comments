@@ -13,15 +13,13 @@ namespace Qc\QcComments\Service;
  *
  ***/
 
-
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Qc\QcComments\Domain\Filter\Filter;
 use Qc\QcComments\Domain\Filter\StatisticsFilter;
 use TYPO3\CMS\Core\Http\Response;
 
 class StatisticsTabService extends QcBackendModuleService
 {
-
     protected StatisticsFilter $filter;
     protected bool $showStatisticsForHiddenPage;
 
@@ -29,14 +27,14 @@ class StatisticsTabService extends QcBackendModuleService
     {
         parent::__construct();
         $this->showStatisticsForHiddenPage
-            = $this->tsConfiguration->showForHiddenPage("statistics");
+            = $this->tsConfiguration->showForHiddenPage('statistics');
     }
 
     public function getPageStatistics(): array
     {
         $pages_ids = $this->commentsRepository->getPageIdsList();
         $currentPageId = $this->root_id;
-        $maxPages = $this->tsConfiguration->getNumberOfSubPages("statistics");
+        $maxPages = $this->tsConfiguration->getNumberOfSubPages('statistics');
         $resultData = $this->commentsRepository
                         ->getStatistics(
                             $pages_ids,
@@ -53,11 +51,10 @@ class StatisticsTabService extends QcBackendModuleService
             'rows' => $formattedData,
             'pagesId' => $pages_ids,
             'settings',
-            'currentPageId' => $currentPageId
+            'currentPageId' => $currentPageId,
         ];
 
     }
-
 
     /**
      * This function is used to format the statistics data and the avg of dissatisfaction by page and reason
@@ -65,19 +62,20 @@ class StatisticsTabService extends QcBackendModuleService
      * @param bool $exportRequest
      * @return array
      */
-    public function statisticsDataFormatting($data, bool $exportRequest = false) : array {
+    public function statisticsDataFormatting($data, bool $exportRequest = false): array
+    {
         $rows = [];
 
         foreach ($data as $item) {
             $item['total_neg'] = $item['total'] - $item['total_pos'];
             $total = $item['total_pos'];
-            $item['avg'] = $item['total'] > 0 ?
-                ' ' . number_format((($total) / $item['total']), 2) * 100 . ' %'
+            $item['avg'] = $item['total'] > 0
+                ? ' ' . number_format(($total / $item['total']) * 100, 2) . ' %'
                 : '0 %';
             $item['total_pos'] = $item['total_pos'] ?: '0';
-            if(!$exportRequest && $this->filter->getCommentReason() !== '%'){
+            if (!$exportRequest && $this->filter->getCommentReason() !== '%') {
                 $avg = $this->commentsRepository->getDissatisfactionAvg($item['page_uid']);
-                $item['dissatisfaction'] = number_format(($avg), 2) * 100 . ' %';
+                $item['dissatisfaction'] = number_format($avg * 100, 2) . ' %';
             }
             $rows[] = $item;
         }
@@ -103,18 +101,18 @@ class StatisticsTabService extends QcBackendModuleService
         $total_neg = 0;
         $total = 0;
         $page_title = '';
-        foreach ($data as $item){
-            if($item['page_uid'] == $this->root_id){
+        foreach ($data as $item) {
+            if ($item['page_uid'] == $this->root_id) {
                 $page_title = $item['page_title'];
             }
-            $itemAvg = floatval(str_replace('%', '', $item['avg']));
+            $itemAvg = (float)(str_replace('%', '', $item['avg']));
             $avg += $itemAvg;
-            $total_pos += intval($item['total_pos']);
-            $total_neg += intval($item['total_neg']);
-           $total += $item['total'];
+            $total_pos += (int)($item['total_pos']);
+            $total_neg += (int)($item['total_neg']);
+            $total += $item['total'];
         }
         $itemLength = count($resultData) > 0 ? count($resultData) : 1;
-        $avg = number_format(($avg / $itemLength), 1). ' %';
+        $avg = number_format(($avg / $itemLength), 1) . ' %';
         // Getting the number of comments
         $total_comment = $this->commentsRepository
                             ->getTotalNonEmptyComment($this->showStatisticsForHiddenPage);
@@ -134,21 +132,20 @@ class StatisticsTabService extends QcBackendModuleService
                                         ->translate(self::QC_LANG_FILE . 'stats.h.nonEmptyComment');
         return [
             'headers' => $headers,
-            'row' => $result
+            'row' => $result,
         ];
     }
-
 
     /**
      * This function is used to generate a filter object from the ServerRequest
      * @param ServerRequestInterface $request
      * @return Filter
      */
-    public function getFilterFromRequest($request): Filter
+    public function getFilterFromRequest(ServerRequestInterface $request): Filter
     {
         $filter = new StatisticsFilter();
         $filter->setLang($request->getQueryParams()['parameters']['lang']);
-        $filter->setDepth(intval($request->getQueryParams()['parameters']['depth']));
+        $filter->setDepth((int)($request->getQueryParams()['parameters']['depth']));
         $filter->setDateRange($request->getQueryParams()['parameters']['selectDateRange']);
         $filter->setStartDate($request->getQueryParams()['parameters']['startDate'] ?? '');
         $filter->setEndDate($request->getQueryParams()['parameters']['endDate'] ?? '');
@@ -161,7 +158,7 @@ class StatisticsTabService extends QcBackendModuleService
      * @param Filter|null $filter
      * @return Filter|null
      */
-    public function processFilter(Filter $filter = null): ?Filter
+    public function processFilter(?Filter $filter = null): ?Filter
     {
         // Add filtering to records
         if ($filter === null) {
@@ -184,7 +181,6 @@ class StatisticsTabService extends QcBackendModuleService
         return $filter;
     }
 
-
     /**
      * This function is used to return the headers used in the exported file and the BE module table
      * @param bool $headersForExport
@@ -199,9 +195,9 @@ class StatisticsTabService extends QcBackendModuleService
             'total_pos',
             'total_neg',
             'total',
-            'avg'
+            'avg',
         ];
-        if($headersForExport){
+        if ($headersForExport) {
             $columns[] = 'technicalProblems';
         }
 
@@ -216,7 +212,7 @@ class StatisticsTabService extends QcBackendModuleService
      * @param Filter $filter
      * @return Response
      */
-    public function exportStatisticsData(Filter  $filter): Response
+    public function exportStatisticsData(Filter $filter): Response
     {
         $pagesIds = $this->getPagesIds($filter, $this->root_id);
         $data = $this->commentsRepository
@@ -240,8 +236,7 @@ class StatisticsTabService extends QcBackendModuleService
             $i++;
         }
 
-        return parent::export($filter,$this->root_id,'stats', $headers, $mappedData);
+        return parent::export($filter, $this->root_id, 'stats', $headers, $mappedData);
     }
-
 
 }

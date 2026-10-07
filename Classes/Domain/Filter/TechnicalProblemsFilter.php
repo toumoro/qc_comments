@@ -2,7 +2,6 @@
 
 namespace Qc\QcComments\Domain\Filter;
 
-
 class TechnicalProblemsFilter extends Filter
 {
     protected const KEY_INCLUDE_FIXED_TECHNICAL_PROBLEMS = 'includeFixedTechnicalProblems';
@@ -12,7 +11,6 @@ class TechnicalProblemsFilter extends Filter
      */
     public bool $includeFixedTechnicalProblems = false;
 
-
     /**
      * @param string $lang
      * @param string $startDate
@@ -20,14 +18,13 @@ class TechnicalProblemsFilter extends Filter
      * @param string $dateRange
      * @param int $depth
      * @param bool $includeEmptyPages
-     * @param string $useful
      * @param bool $includeFixedTechnicalProblems
      */
     public function __construct(
         string $lang = '',
         string $startDate = '',
         string $endDate = '',
-        string $dateRange ='1 day',
+        string $dateRange = '1 day',
         int $depth = 1,
         bool $includeEmptyPages = false,
         bool $includeFixedTechnicalProblems = false
@@ -39,11 +36,10 @@ class TechnicalProblemsFilter extends Filter
             $dateRange,
             $depth,
             $includeEmptyPages,
-            "NA"
+            'NA'
         );
         $this->includeFixedTechnicalProblems = $includeFixedTechnicalProblems;
     }
-
 
     /**
      * @param bool $includeFixedTechnicalProblems
@@ -69,7 +65,7 @@ class TechnicalProblemsFilter extends Filter
         return array_merge(
             parent::toArray(),
             [
-                self::KEY_INCLUDE_FIXED_TECHNICAL_PROBLEMS => $this->getIncludeFixedTechnicalProblems() ?? false,
+                self::KEY_INCLUDE_FIXED_TECHNICAL_PROBLEMS => $this->getIncludeFixedTechnicalProblems(),
             ],
         );
     }
@@ -79,34 +75,44 @@ class TechnicalProblemsFilter extends Filter
      * @param array $values
      * @return TechnicalProblemsFilter
      */
-    public static function getInstanceFromArray(array $values) : TechnicalProblemsFilter
+    public static function getInstanceFromArray(array $values): TechnicalProblemsFilter
     {
-         return new TechnicalProblemsFilter(
-              $values[parent::KEY_LANG],
-              $values[parent::KEY_START_DATE],
-              $values[parent::KEY_END_DATE],
-              $values[parent::KEY_DATE_RANGE],
-              $values[parent::KEY_DEPTH],
-              $values[parent::KEY_INCLUDE_EMPTY_PAGES],
-              $values[self::KEY_INCLUDE_FIXED_TECHNICAL_PROBLEMS] ?? false
-          );
+        return new TechnicalProblemsFilter(
+            $values[parent::KEY_LANG],
+            $values[parent::KEY_START_DATE],
+            $values[parent::KEY_END_DATE],
+            $values[parent::KEY_DATE_RANGE],
+            $values[parent::KEY_DEPTH],
+            $values[parent::KEY_INCLUDE_EMPTY_PAGES],
+            $values[self::KEY_INCLUDE_FIXED_TECHNICAL_PROBLEMS] ?? false
+        );
     }
     /**
      * @return string
      */
-    public function getUsabilityCriteria() :string {
+    public function getUsabilityCriteria(): string
+    {
         return " useful like 'NA'";
     }
 
     /**
      * @return string
      */
-    public function getRecordVisibility() :string{
-        if($this->getIncludeFixedTechnicalProblems()){
-            return "";
+    public function getCommentReason(): string
+    {
+        return '%';
+    }
+
+    /**
+     * @return string
+     */
+    public function getRecordVisibility(): string
+    {
+        if ($this->getIncludeFixedTechnicalProblems()) {
+            return '';
         }
-        else{
-            return ' and fixed = 0';
-        }
+
+        return ' and fixed = 0';
+
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /***
@@ -11,7 +12,9 @@ declare(strict_types=1);
  *  (c) 2023 <techno@quebec.ca>
  *
  ***/
+
 namespace Qc\QcComments\Configuration;
+
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
 class TsConfiguration
@@ -20,7 +23,6 @@ class TsConfiguration
      * @var array
      */
     protected array $tsConfig = [];
-
 
     public function __construct()
     {
@@ -52,38 +54,39 @@ class TsConfiguration
      * @param $moduleName
      * @return string
      */
-    public function getOrderType($moduleName) : string {
-        if($this->tsConfig[$moduleName.'.']['orderType'] == null
-            || !in_array(strtoupper($this->tsConfig[$moduleName.'.']['orderType']), ['ASC', 'DESC'])){
+    public function getOrderType($moduleName): string
+    {
+        if ($this->tsConfig[$moduleName . '.']['orderType'] == null
+            || !in_array(strtoupper($this->tsConfig[$moduleName . '.']['orderType']), ['ASC', 'DESC'])) {
             return 'DESC';
         }
-        return $this->tsConfig[$moduleName.'.']['orderType'];
+        return $this->tsConfig[$moduleName . '.']['orderType'];
     }
-
 
     /**
      * @param $moduleName
      * @return string
      */
-    public function getMaxRecords($moduleName): string {
-        if($this->tsConfig[$moduleName.'.']['maxRecords'] == null
-            || !is_numeric($this->tsConfig[$moduleName.'.']['maxRecords'])){
+    public function getMaxRecords($moduleName): string
+    {
+        if ($this->tsConfig[$moduleName . '.']['maxRecords'] == null
+            || !is_numeric($this->tsConfig[$moduleName . '.']['maxRecords'])) {
             return '100';
         }
-        return $this->tsConfig[$moduleName.'.']['maxRecords'];
+        return $this->tsConfig[$moduleName . '.']['maxRecords'];
     }
 
     /**
      * @param $moduleName
      * @return string
      */
-    public function getNumberOfSubPages($moduleName) : string {
+    public function getNumberOfSubPages($moduleName): string
+    {
         $value = $this->tsConfig[$moduleName . '.']['numberOfSubPages'] ?? null;
-        return (is_numeric($value) && $value !== null)
+        return is_numeric($value)
             ? (string)$value
             : '50';
     }
-
 
     /**
      * @param $moduleName
@@ -91,7 +94,7 @@ class TsConfiguration
      */
     public function showForHiddenPage($moduleName): bool
     {
-        return ($this->tsConfig[$moduleName.'.']['showRecordsForHiddenPages'] ?? false) == '1';
+        return ($this->tsConfig[$moduleName . '.']['showRecordsForHiddenPages'] ?? false) == '1';
     }
 
     /**
@@ -105,14 +108,16 @@ class TsConfiguration
     /**
      * @return bool
      */
-    public function isFixButtonEnabled(): bool {
+    public function isFixButtonEnabled(): bool
+    {
         return ($this->tsConfig['technicalProblems.']['enableFixButton'] ?? false) == '1';
     }
 
     /**
      * @return bool
      */
-    public function isRemoveButtonEnabled(): bool {
+    public function isRemoveButtonEnabled(): bool
+    {
         return ($this->tsConfig['comments.']['enableRemoveButton'] ?? false) == '1';
     }
 
@@ -120,7 +125,8 @@ class TsConfiguration
      * @param $section
      * @return bool
      */
-    public function isDeleteButtonEnabled($section): bool {
-        return ($this->tsConfig[$section.'.']['enableDeleteButton'] ?? false) == '1';
+    public function isDeleteButtonEnabled($section): bool
+    {
+        return ($this->tsConfig[$section . '.']['enableDeleteButton'] ?? false) == '1';
     }
 }
