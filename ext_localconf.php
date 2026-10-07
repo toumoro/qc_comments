@@ -1,7 +1,6 @@
 <?php
 
 use Qc\QcComments\Controller\Frontend\CommentsController;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 if (!defined('TYPO3')) {
@@ -29,8 +28,4 @@ call_user_func(
             ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
         );
     }
-);
-
-ExtensionManagementUtility::addUserTSConfig(
-    "@import 'EXT:qc_comments/Configuration/user.tsconfig'"
 );

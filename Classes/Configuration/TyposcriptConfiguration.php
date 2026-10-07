@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /***
@@ -50,17 +51,14 @@ class TyposcriptConfiguration
     protected Context $context;
 
     /**
-     * @param string $pluginName
-     * @return void
+     * @param string $extensionName
      */
-
     public function setSettings(string $extensionName): void
     {
         $configurationManager = GeneralUtility::makeInstance(ConfigurationManagerInterface::class);
         $this->settings =  $configurationManager->getConfiguration(
             $this->configurationType,
             $extensionName
-
         );
     }
 
@@ -113,37 +111,39 @@ class TyposcriptConfiguration
         return !empty($settings['spamshield']['_enable']) && $validationActivated;
     }
 
-
     /**
      * This function is used to retrieve the maximum or the minimum number of characters based on the comment type ('positive_comments', 'negative_comments', 'reporting_problem')
      * @param $section_type
      * @param $limit
      * @return int
      */
-    public function getCommentsMaxMinLength($section_type,  $limit): int
+    public function getCommentsMaxMinLength($section_type, $limit): int
     {
-        return intval($this->settings['options'][$section_type][$limit] ?? 0);
+        return (int)($this->settings['options'][$section_type][$limit] ?? 0);
     }
-
 
     /**
      * @return bool
      */
-    public function isRecaptchaEnabled(): bool {
+    public function isRecaptchaEnabled(): bool
+    {
         return ($this->settings['recaptcha']['enabled'] ?? false) == '1';
     }
 
-    public function getRecaptchaSitekey(){
+    public function getRecaptchaSitekey()
+    {
         return $this->settings['recaptcha']['sitekey'] ?? '';
 
     }
 
-    public function getRecaptchaSecretKey(){
+    public function getRecaptchaSecretKey()
+    {
         return $this->settings['recaptcha']['secret'] ?? '';
 
     }
 
-    public function getRecaptchaMode(){
+    public function getRecaptchaMode()
+    {
         return $this->settings['recaptcha']['recaptchaMode'] ?? '';
 
     }
@@ -151,7 +151,28 @@ class TyposcriptConfiguration
     /**
      * @return bool
      */
-    public function isSpamShieldEnabled() : bool {
+    public function isTurnstileEnabled(): bool
+    {
+        return ($this->settings['turnstile']['enabled'] ?? false) == '1';
+    }
+
+    public function getTurnstileSitekey()
+    {
+        return $this->settings['turnstile']['sitekey'] ?? '';
+
+    }
+
+    public function getTurnstileSecretKey()
+    {
+        return $this->settings['turnstile']['secret'] ?? '';
+
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSpamShieldEnabled(): bool
+    {
         return ($this->settings['spamshield']['_enable'] ?? false) == '1';
     }
 
@@ -159,11 +180,13 @@ class TyposcriptConfiguration
      * @param string $methodName
      * @return bool
      */
-    public function isMethodEnabled(string $methodName) : bool {
+    public function isMethodEnabled(string $methodName): bool
+    {
         return ($this->settings['spamshield']['methods']["$methodName"]['_enable'] ?? false) == '1';
     }
 
-    public function getLinkCheckMethodLinksLimit(){
+    public function getLinkCheckMethodLinksLimit()
+    {
         return $this->settings['spamshield']['methods']['3']['configuration']['linkLimit'] ?? '1';
 
     }
@@ -173,7 +196,8 @@ class TyposcriptConfiguration
      * 0 => replace the personal data by the given replacement string
      * @return int
      */
-    public function getAnonymizationMode(): int {
+    public function getAnonymizationMode(): int
+    {
         $settings = $this->settings['comments']['anonymizeComment'] ?? [];
         return (int)($settings['anonymizeMode'] ?? 0);
     }
@@ -181,33 +205,37 @@ class TyposcriptConfiguration
     /**
      * @return string
      */
-    public function getAnonymizedEmailReplacement() : string {
+    public function getAnonymizedEmailReplacement(): string
+    {
         return $this->settings['comments']['anonymizeComment']['anonymizedEmailReplacement'] ?? '';
     }
 
     /**
      * @return string
      */
-    public function getAnonymizedNumberReplacement() : string {
+    public function getAnonymizedNumberReplacement(): string
+    {
         return $this->settings['comments']['anonymizeComment']['anonymizedNumberReplacement'] ?? '';
     }
-
 
     /**
      * @return bool
      */
-    public function isAnonymizeCommentEnabled() : bool {
+    public function isAnonymizeCommentEnabled(): bool
+    {
         return ($this->settings['comments']['anonymizeComment']['enabled'] ?? false) == '1';
     }
 
     /**
      * @return string
      */
-    public function getAnonymizationCommentPattern() : string {
+    public function getAnonymizationCommentPattern(): string
+    {
         return $this->settings['comments']['anonymizeComment']['pattern'] ?? '';
     }
 
-    public function getReasonOptions($lang) : array {
+    public function getReasonOptions($lang): array
+    {
 
         if (!isset($this->settings['options']) || !is_array($this->settings['options'])) {
             return [];
@@ -216,7 +244,7 @@ class TyposcriptConfiguration
         $options = $this->settings['options'];
         $optionsByLang = [];
 
-        foreach ($options as $sectionName => $items){
+        foreach ($options as $sectionName => $items) {
             $optionsByLang[$sectionName] = [];
             foreach ($items['reasons'] as $item) {
                 if (isset($item[$lang])) {
@@ -233,13 +261,13 @@ class TyposcriptConfiguration
         return $optionsByLang;
     }
 
-
     /**
      * This function is used to retrieve reasons based on the selected option (useful/not useful) in the BE filter
      * @param $useful
      * @return array
      */
-    public function getReasonsForBE($useful) :array {
+    public function getReasonsForBE($useful): array
+    {
         $currentLang = $GLOBALS['LANG']->lang ?? 'en';
 
         $options = $this->settings['plugin.']['tx_qccomments.']['settings.']['options.'];
@@ -248,12 +276,12 @@ class TyposcriptConfiguration
 
         // Loop through each item in the reasons
         foreach ($options[$reasonType]['reasons.'] as $item) {
-            if (isset($item[$currentLang.'.'])) {
+            if (isset($item[$currentLang . '.'])) {
                 // Add the item for the specified language to the result
                 $optionsByLang[] = [
                     'code' => $item['code'], // Keep the code for reference
-                    'short_label' => $item[$currentLang.'.']['short_label'], // Directly include short_label
-                    'long_label' => $item[$currentLang.'.']['long_label'],   // Directly include long_label
+                    'short_label' => $item[$currentLang . '.']['short_label'], // Directly include short_label
+                    'long_label' => $item[$currentLang . '.']['long_label'],   // Directly include long_label
                 ];
             }
         }
@@ -266,24 +294,25 @@ class TyposcriptConfiguration
      * @param $code
      * @return mixed|string
      */
-    public function getOptionByCodeFrBE($code) {
+    public function getOptionByCodeFrBE($code)
+    {
         $currentLang = $GLOBALS['BE_USER']->user['lang'];
-        if($currentLang == 'default'){
+        if ($currentLang == 'default') {
             $currentLang = 'en';
         }
         $optionsType = $this->settings['plugin.']['tx_qccomments.']['settings.']['options.'];
         if (!empty($optionsType)) {
             // Loop through each item
-            foreach ($optionsType as $options){
+            foreach ($optionsType as $options) {
                 foreach ($options['reasons.'] as $items) {
-                  if($items['code'] == $code) {
-                        if($items[$currentLang.'.'] ?? false) {
-                            return $items[$currentLang.'.']['short_label'];
+                    if ($items['code'] == $code) {
+                        if ($items[$currentLang . '.'] ?? false) {
+                            return $items[$currentLang . '.']['short_label'];
                         }
                     }
                 }
             }
         }
-        return "";
+        return '';
     }
 }

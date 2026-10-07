@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Exceptions;
 
 /***
@@ -13,7 +15,4 @@ namespace Qc\QcComments\SpamShield\Exceptions;
  *
  ***/
 
-class ClassDoesNotExistException extends \Exception
-{
-
-}
+class ClassDoesNotExistException extends \Exception {}

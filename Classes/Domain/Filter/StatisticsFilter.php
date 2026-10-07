@@ -3,17 +3,16 @@
 namespace Qc\QcComments\Domain\Filter;
 
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 class StatisticsFilter extends Filter
 {
-    protected const KEY_COMMENT_REASON= "commentReason";
+    protected const KEY_COMMENT_REASON = 'commentReason';
 
     /**
      * @var string
      */
-    protected string $commentReason = "%";
+    protected string $commentReason = '%';
 
     protected TyposcriptConfiguration $typoscriptConfiguration;
 
@@ -31,11 +30,11 @@ class StatisticsFilter extends Filter
         string $lang = '',
         string $startDate = '',
         string $endDate = '',
-        string $dateRange ='1 day',
+        string $dateRange = '1 day',
         int $depth = 1,
         bool $includeEmptyPages = false,
         string $useful = '%',
-        string $commentReason = "%"
+        string $commentReason = '%'
     ) {
         parent::__construct(
             $lang,
@@ -68,7 +67,6 @@ class StatisticsFilter extends Filter
         $this->commentReason = $commentReason == '' ? '%' : $commentReason;
     }
 
-
     /**
      * @return array
      */
@@ -77,7 +75,7 @@ class StatisticsFilter extends Filter
         return array_merge(
             parent::toArray(),
             [
-                self::KEY_COMMENT_REASON => $this->getCommentReason() ?? "%"
+                self::KEY_COMMENT_REASON => $this->getCommentReason(),
             ]
         );
     }
@@ -97,24 +95,24 @@ class StatisticsFilter extends Filter
             $values[parent::KEY_DEPTH],
             $values[parent::KEY_INCLUDE_EMPTY_PAGES],
             $values[parent::KEY_USEFUL],
-            $values[self::KEY_COMMENT_REASON] ?? "%"
-
+            $values[self::KEY_COMMENT_REASON] ?? '%'
         );
     }
 
     /**
      * @return string
      */
-     public function getUsabilityCriteria(): string
-     {
+    public function getUsabilityCriteria(): string
+    {
         return " useful not like 'NA'";
     }
 
     /**
      * @return string
      */
-     public function getRecordVisibility() :string{
-        return "and hidden_comment = 0";
+    public function getRecordVisibility(): string
+    {
+        return 'and hidden_comment = 0';
     }
 
 }

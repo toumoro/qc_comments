@@ -1,4 +1,5 @@
 <?php
+
 namespace Qc\QcComments\Controller\Backend;
 
 use Qc\QcComments\Service\QcBackendModuleService;
@@ -32,9 +33,9 @@ class QcCommentsBEController extends ActionController
     /**
      * @var QcBackendModuleService
      */
-    protected QcBackendModuleService  $qcBeModuleService;
+    protected QcBackendModuleService $qcBeModuleService;
 
-    const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
+    public const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
 
     /**
      * @var ModuleTemplateFactory
@@ -56,7 +57,6 @@ class QcCommentsBEController extends ActionController
         $this->localizationUtility = GeneralUtility::makeInstance(LocalizationUtility::class);
     }
 
-
     public function initializeAction(): void
     {
         $this->moduleData = $this->request->getAttribute('moduleData');
@@ -64,7 +64,7 @@ class QcCommentsBEController extends ActionController
         $this->moduleTemplate->setTitle('QcComments');
         $this->moduleTemplate->setFlashMessageQueue($this->getFlashMessageQueue());
         $this->controllerName = $this->request->getControllerName();
-        $this->root_id = (int) ($this->request->getParsedBody()['id'] ?? $this->request->getQueryParams()['id'] ?? null ?? 0);
+        $this->root_id = (int)($this->request->getParsedBody()['id'] ?? $this->request->getQueryParams()['id'] ?? 0);
     }
 
     /**
@@ -104,7 +104,7 @@ class QcCommentsBEController extends ActionController
         $menu->addMenuItem(
             $menu->makeMenuItem()
                 ->setTitle($statisticsTitle)
-                ->setHref($this->uriBuilder->uriFor('statistics', [],'Backend\StatisticsBE'))
+                ->setHref($this->uriBuilder->uriFor('statistics', [], 'Backend\StatisticsBE'))
                 ->setActive($currentAction === 'statistics')
         );
         $menu->addMenuItem(
@@ -143,16 +143,16 @@ class QcCommentsBEController extends ActionController
             return (new ForwardResponse($lastActionName))
                     ->withControllerName($lastControllerName);
         }
-        else {
-            $this->qcBeModuleService->getBackendSession()->store(
-                'lastAction',
-                [
-                    'controllerName' => $this->controllerName,
-                    'actionName' => $currentAction
-                ]
-            );
-            return new ForwardResponse($currentAction);
-        }
+
+        $this->qcBeModuleService->getBackendSession()->store(
+            'lastAction',
+            [
+                'controllerName' => $this->controllerName,
+                'actionName' => $currentAction,
+            ]
+        );
+        return new ForwardResponse($currentAction);
+
     }
 
     /**

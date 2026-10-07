@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] — current
 
+### Added
+- **TYPO3 v14 compatibility** — issue 20766
+  Widened `typo3/cms-core` and `fluidtypo3/vhs` composer constraints to also
+  accept `^14.0`/`^8.0` (kept `^12.4`/`^13.4` support). Removed the call to
+  `ExtensionManagementUtility::addUserTSConfig()` (removed in TYPO3 v14) from
+  `ext_localconf.php` — `Configuration/user.tsconfig` is auto-loaded by TYPO3's
+  convention already, no manual registration needed. Added `: void` return type
+  to `CheckPageModeViewHelper::initializeArguments()` to match the TYPO3Fluid v14
+  `AbstractViewHelper` signature (was a fatal error). Fixed PHP 8.4 "implicitly
+  nullable parameter" deprecations across controllers/services/filters. Bumped
+  dev tooling (`phpunit/phpunit`, `typo3/testing-framework`) to versions
+  compatible with v14, migrated the functional test suite from
+  `importDataSet()` (XML, removed in testing-framework 9.x) to
+  `importCSVDataSet()` (CSV). Added a `qc/qc-comments-set` TYPO3 Site Set
+  (`Configuration/Sets/QcComments`) so projects using Site Sets instead of
+  classic static templates can include the extension's TypoScript.
+
 ### Fixed
 - **[Bug] Date filter (userDefined) not working in backend module** — pgu/pgu#9711
   The "custom period" filter (start date / end date) was no longer filtering results

@@ -11,28 +11,28 @@ return [
     'export_comments' => [
         'path' => '/export_comments',
         'referrer' => 'required,refresh-empty',
-        'target' => CommentsBEController::class . '::exportCommentsAction'
+        'target' => CommentsBEController::class . '::exportCommentsAction',
     ],
     'export_hiddenComments' => [
         'path' => '/export_hiddenComments',
         'referrer' => 'required,refresh-empty',
-        'target' => HiddenCommentsBEController::class . '::exportHiddenCommentsAction'
+        'target' => HiddenCommentsBEController::class . '::exportHiddenCommentsAction',
     ],
     'export_statistics' => [
         'path' => '/export_statistics',
         'referrer' => 'required,refresh-empty',
-        'target' => StatisticsBEController::class . '::exportStatisticsAction'
+        'target' => StatisticsBEController::class . '::exportStatisticsAction',
     ],
 
     'problem_fixed' => [
         'path' => '/problem_fixed',
         'referrer' => 'required, refresh-empty',
-        'target' => TechnicalProblemsBEController::class. '::technicalProblemFixedAction'
+        'target' => TechnicalProblemsBEController::class . '::technicalProblemFixedAction',
     ],
     'export_technicalProblems' => [
         'path' => '/export_technicalProblems',
         'referrer' => 'required,refresh-empty',
-        'target' => TechnicalProblemsBEController::class . '::exportTechnicalProblemsAction'
-    ]
+        'target' => TechnicalProblemsBEController::class . '::exportTechnicalProblemsAction',
+    ],
 
 ];

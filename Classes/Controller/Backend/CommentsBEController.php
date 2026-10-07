@@ -21,7 +21,7 @@ class CommentsBEController extends QcCommentsBEController
      * @return ResponseInterface
      * @throws Exception
      */
-    public function commentsAction(CommentsFilter $filter = null, string $operation = ''): ResponseInterface
+    public function commentsAction(?CommentsFilter $filter = null, string $operation = ''): ResponseInterface
     {
 
         $this->addMainMenu('comments');
@@ -34,9 +34,9 @@ class CommentsBEController extends QcCommentsBEController
             'lastAction',
             [
                 'controllerName' => $this->controllerName,
-                'actionName' => 'comments'
-            ]);
-
+                'actionName' => 'comments',
+            ]
+        );
 
         $this->qcBeModuleService->setRootId($this->root_id);
         $this->qcBeModuleService->processFilter();
@@ -51,15 +51,21 @@ class CommentsBEController extends QcCommentsBEController
             $data = $this->qcBeModuleService->getComments();
             if ($data['tooMuchResults'] === true) {
                 $message = $this->localizationUtility
-                    ->translate(self::QC_LANG_FILE . 'tooMuchResults',
-                        null, [$data['maxRecords']]);
+                    ->translate(
+                        self::QC_LANG_FILE . 'tooMuchResults',
+                        null,
+                        [$data['maxRecords']]
+                    );
                 $this->addFlashMessage($message, '', ContextualFeedbackSeverity::WARNING);
             }
 
             if ($data['tooMuchPages'] === true) {
                 $message = $this->localizationUtility
-                    ->translate(self::QC_LANG_FILE . 'tooMuchPages',
-                        null, [$data['numberOfSubPages']]);
+                    ->translate(
+                        self::QC_LANG_FILE . 'tooMuchPages',
+                        null,
+                        [$data['numberOfSubPages']]
+                    );
                 $this->addFlashMessage($message, '', ContextualFeedbackSeverity::WARNING);
             }
 
@@ -73,7 +79,7 @@ class CommentsBEController extends QcCommentsBEController
                         'pagesId' => $data['pagesId'],
                         'currentPageId' => $data['currentPageId'],
                         'isRemoveButtonEnabled' => $this->qcBeModuleService->isRemoveButtonEnabled(),
-                        'isDeleteButtonEnabled' => $this->qcBeModuleService->isDeleteButtonEnabled('comments')
+                        'isDeleteButtonEnabled' => $this->qcBeModuleService->isDeleteButtonEnabled('comments'),
                     ]
                 );
         }
@@ -82,7 +88,6 @@ class CommentsBEController extends QcCommentsBEController
         $this->moduleTemplate->assign('filter', $filter);
         return $this->moduleTemplate->renderResponse('Comments');
     }
-
 
     /**
      * This function is used to delete the comment (deleted = 1)
@@ -129,7 +134,7 @@ class CommentsBEController extends QcCommentsBEController
     {
         $this->qcBeModuleService
             = GeneralUtility::makeInstance(CommentsTabService::class);
-        $root_id = intval($request->getQueryParams()['parameters']['currentPageId']);
+        $root_id = (int)($request->getQueryParams()['parameters']['currentPageId']);
         $this->qcBeModuleService->setRootId($root_id);
         $filter = $this->qcBeModuleService->processFilter();
         return $this->qcBeModuleService->exportCommentsData($filter);

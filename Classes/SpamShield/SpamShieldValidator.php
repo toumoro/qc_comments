@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield;
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -15,9 +17,9 @@ namespace Qc\QcComments\SpamShield;
 use Exception;
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
 use Qc\QcComments\Domain\Model\Comment;
-use Qc\QcComments\SpamShield\Methods\AbstractMethod;
 use Qc\QcComments\SpamShield\Exceptions\ClassDoesNotExistException;
 use Qc\QcComments\SpamShield\Exceptions\InterfaceNotImplementedException;
+use Qc\QcComments\SpamShield\Methods\AbstractMethod;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Validation\Exception\InvalidValidationOptionsException;
 use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator as ExtbaseAbstractValidator;
@@ -27,7 +29,6 @@ use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator as ExtbaseAbstractV
  */
 class SpamShieldValidator extends ExtbaseAbstractValidator
 {
-
     /**
      * Spam indication
      *
@@ -67,8 +68,7 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
     /**
      * @var TyposcriptConfiguration
      */
-    protected TyposcriptConfiguration  $typoscriptConfiguration;
-
+    protected TyposcriptConfiguration $typoscriptConfiguration;
 
     /**
      * Constructs the validator and sets validation options
@@ -76,37 +76,36 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
      * @param array $options Options for the validator
      * @throws InvalidValidationOptionsException
      */
-   /* public function __construct(array $options = [])
-    {
-        parent::__construct($options);
+    /* public function __construct(array $options = [])
+     {
+         parent::__construct($options);
 
 
-    }*/
+     }*/
     /**
      * @param Comment $comment
      * @throws Exception
      */
-    public function isValid($comment) : void
+    public function isValid($comment): void
     {
         $this->typoscriptConfiguration
             = new TyposcriptConfiguration();
         $this->settings = $this->typoscriptConfiguration->getTypoScriptSettings();
 
-       if ($this->typoscriptConfiguration->isSpamShieldEnabled()) {
-           $this->runAllSpamMethods($comment);
-           $this->calculateSpamFactor();
-           if(!empty($this->messages)){
-               $this->addError(
-                   'spam_details',
-                   (int)$this->getCalculatedSpamFactor(true)
-               );
-           }
+        if ($this->typoscriptConfiguration->isSpamShieldEnabled()) {
+            $this->runAllSpamMethods($comment);
+            $this->calculateSpamFactor();
+            if (!empty($this->messages)) {
+                $this->addError(
+                    'spam_details',
+                    (int)$this->getCalculatedSpamFactor(true)
+                );
+            }
         }
     }
 
     /**
      * @param Comment $comment
-     * @return void
      * @throws Exception
      */
     protected function runAllSpamMethods(Comment $comment): void
@@ -157,7 +156,6 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
 
     }
 
-
     /**
      * @param bool $readableOutput
      * @return float|string
@@ -168,7 +166,7 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
         if ($readableOutput) {
             $calculatedSpamFactor = $this->formatSpamFactor($calculatedSpamFactor);
         }
-        return intval($this->calculatedSpamFactor);
+        return (int)($this->calculatedSpamFactor);
 
     }
 
@@ -186,8 +184,6 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
     /**
      * calculate spam factor for this mail
      *        spam formula with asymptote 1 (100%)
-     *
-     * @return void
      */
     protected function calculateSpamFactor(): void
     {
@@ -200,29 +196,24 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
 
     /**
      * @param float $calculatedSpamFactor
-     * @return void
      */
     public function setCalculatedSpamFactor(float $calculatedSpamFactor): void
     {
         $this->calculatedSpamFactor = $calculatedSpamFactor;
     }
 
-
     /**
      * Increase Global Indicator
      *
      * @param int $indication
-     * @return void
      */
     public function increaseSpamIndicator(int $indication): void
     {
         $this->setSpamIndicator($this->getSpamIndicator() + $indication);
     }
 
-
     /**
      * @param int $spamIndicator
-     * @return void
      */
     public function setSpamIndicator(int $spamIndicator): void
     {
@@ -249,10 +240,8 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
         return $methods;
     }
 
-
     /**
      * @param string $message
-     * @return void
      */
     public function addMessage(string $message): void
     {
@@ -263,7 +252,6 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
 
     /**
      * @param array $messages
-     * @return void
      */
     public function setMessages(array $messages): void
     {
@@ -286,6 +274,5 @@ class SpamShieldValidator extends ExtbaseAbstractValidator
     {
         return !empty($this->settings['spamshield']['_enable']);
     }
-
 
 }

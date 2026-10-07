@@ -1,4 +1,5 @@
 <?php
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -12,22 +13,23 @@
 
 namespace Qc\QcComments\Domain\Repository;
 
-use TYPO3\CMS\Core\Database\Connection;
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
 use Qc\QcComments\Domain\Filter\Filter;
-use TYPO3\CMS\Backend\Tree\View\PageTreeView;
+use Qc\QcComments\Domain\Model\Comment;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
-use TYPO3\CMS\Core\Utility\DebugUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/**
+ * @extends Repository<Comment>
+ */
 class CommentRepository extends Repository
 {
-
     /**
      * @var int
      */
@@ -87,7 +89,6 @@ class CommentRepository extends Repository
         return $connectionPool->getQueryBuilderForTable($this->tableName);
     }
 
-
     /**
      * This function is used to get the SQL constraints for the comments and statistics queries
      * @param array $page_ids
@@ -98,17 +99,16 @@ class CommentRepository extends Repository
     {
         $constrains = [
             'joinCond' => '',
-            'whereClause' => ''
+            'whereClause' => '',
         ];
         $ids_list = $page_ids ?: $this->getPageIdsList();
         $ids_csv = implode(',', $ids_list);
         $constrains['joinCond'] = " p.uid = uid_orig $this->date_criteria $this->lang_criteria";
         $constrains['whereClause'] = " p.uid in ($ids_csv)";
-        $constrains['joinCond'] .= " AND ". $this->filter->getUsabilityCriteria();
-        if($this->filter->getUsabilityCriteria() == " useful like 'NA'"){
+        $constrains['joinCond'] .= ' AND ' . $this->filter->getUsabilityCriteria();
+        if ($this->filter->getUsabilityCriteria() == " useful like 'NA'") {
             $constrains['user'] = 'fixed_by_user_uid';
-        }
-        else {
+        } else {
             $constrains['user'] = 'hidden_by_user_uid';
         }
         return $constrains;
@@ -127,31 +127,33 @@ class CommentRepository extends Repository
         $limit,
         string $orderType,
         bool $showForHiddenPages = false
-    ): array
-    {
+    ): array {
         $queryBuilder = $this->generateQueryBuilder();
-        if($showForHiddenPages === true){
+        if ($showForHiddenPages === true) {
             $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         }
 
         $constraints = $this->getConstraints($pages_ids);
         $constraints['joinCond'] .= $this->filter->getRecordVisibility();
         $joinMethod = $this->filter->getIncludeEmptyPages() ? 'rightJoin' : 'join';
-        $data= $queryBuilder
+        $data = $queryBuilder
                 ->select(
-                    'p.uid', $this->tableName.'.uid as recordUid',
-                    'beUsers.realName', 'beUsers.email', 'beUsers.username', 'p.title',
-                    $this->tableName.'.reason_code',
-                    $this->tableName.'.date_hour',
-                    $this->tableName.'.comment',
-                    $this->tableName.'.useful',
-                    $this->tableName.'.hidden_date',
-                    $this->tableName.'.fixed_date',
-                    $this->tableName.'.reason_short_label',
-                    $this->tableName.'.url_orig',
-                    $this->tableName.".deleted",
-                    $this->tableName.'.fixed'
-
+                    'p.uid',
+                    $this->tableName . '.uid as recordUid',
+                    'beUsers.realName',
+                    'beUsers.email',
+                    'beUsers.username',
+                    'p.title',
+                    $this->tableName . '.reason_code',
+                    $this->tableName . '.date_hour',
+                    $this->tableName . '.comment',
+                    $this->tableName . '.useful',
+                    $this->tableName . '.hidden_date',
+                    $this->tableName . '.fixed_date',
+                    $this->tableName . '.reason_short_label',
+                    $this->tableName . '.url_orig',
+                    $this->tableName . '.deleted',
+                    $this->tableName . '.fixed'
                 )
                 ->from($this->tableName)
                 ->$joinMethod(
@@ -164,7 +166,7 @@ class CommentRepository extends Repository
                     $this->tableName,
                     'be_users',
                     'beUsers',
-                    'beUsers.uid = '.$constraints["user"]
+                    'beUsers.uid = ' . $constraints['user']
                 )
                 ->where(
                     $constraints['whereClause']
@@ -172,7 +174,7 @@ class CommentRepository extends Repository
 
         if ($limit) {
             // We increment the limit to see if we have more the maximum limit, if so, we show an alert message
-            $limit = intval($limit) + 1;
+            $limit = (int)$limit + 1;
             $data = $data->setMaxResults($limit);
         }
 
@@ -183,10 +185,10 @@ class CommentRepository extends Repository
         $rows = [];
         $count = 0;
         foreach ($data as $item) {
-            if($item['recordUid'] != null){
+            if ($item['recordUid'] != null) {
                 $count++;
             }
-            if($limit == false || $count < $limit ){
+            if ($limit == false || $count < $limit) {
                 $item['reason_short_label'] =  $this->typoscriptConfiguration
                     ->getOptionByCodeFrBE($item['reason_code']);
                 $rows[$item['uid']]['records'][] = $item;
@@ -196,7 +198,7 @@ class CommentRepository extends Repository
 
         return [
             'rows' => $rows,
-            'count' => $count
+            'count' => $count,
         ];
     }
 
@@ -229,12 +231,11 @@ class CommentRepository extends Repository
             ->fetchAssociative()['COUNT(*)'];
     }
 
-
     /**
      * @param $uid
-     * @return void
      */
-    public function deleteComment($uid) : void {
+    public function deleteComment($uid): void
+    {
         $queryBuilder = $this->generateQueryBuilder();
         $queryBuilder
             ->update($this->tableName)
@@ -249,14 +250,14 @@ class CommentRepository extends Repository
      * This function is used to get pages statistics for BE rendering and for export as well
      * @param $page_ids
      * @param $limit
-     * @param false $showForHiddenPages
+     * @param bool $showForHiddenPages
      * @param array $comments
      * @return array
      */
-    public function getStatistics($page_ids, $limit,bool $showForHiddenPages = false, array $comments = []): array
+    public function getStatistics($page_ids, $limit, bool $showForHiddenPages = false, array $comments = []): array
     {
         $queryBuilder = $this->generateQueryBuilder();
-        if($showForHiddenPages){
+        if ($showForHiddenPages) {
             $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         }
         $joinMethod = $this->filter->getIncludeEmptyPages() ? 'rightJoin' : 'join';
@@ -286,17 +287,16 @@ class CommentRepository extends Repository
         $rows =  $data
             ->executeQuery()
             ->fetchAllAssociative();
-        if(!empty($comments)){
-            foreach ($rows as $row){
+        if (!empty($comments)) {
+            foreach ($rows as $row) {
                 $comments[$row['page_uid']]['avg'] = $row['avg'];
                 $comments[$row['page_uid']]['total_pos'] = $row['total_pos'];
                 $comments[$row['page_uid']]['total'] = $row['total'];
             }
             return $comments;
         }
-       return $rows;
+        return $rows;
     }
-
 
     /**
      * This function is used to get the number of technical problems by page
@@ -304,7 +304,8 @@ class CommentRepository extends Repository
      * @return int|mixed
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getCountTechnicalProblemsByPageUid($pageUid){
+    public function getCountTechnicalProblemsByPageUid($pageUid)
+    {
         $queryBuilder = $this->generateQueryBuilder();
         $data = $queryBuilder
             ->addSelectLiteral(
@@ -313,7 +314,8 @@ class CommentRepository extends Repository
             ->from($this->tableName)
 
             ->where(
-                "uid_orig = ".$pageUid . " and useful like 'NA' and fixed = 0 " . $this->date_criteria)
+                'uid_orig = ' . $pageUid . " and useful like 'NA' and fixed = 0 " . $this->date_criteria
+            )
             ->groupBy('uid_orig');
         return $data->executeQuery()
             ->fetchAssociative()['technicalProblemsCount'] ?? 0;
@@ -325,7 +327,8 @@ class CommentRepository extends Repository
      * @return float
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getDissatisfactionAvg($pageUid) : float{
+    public function getDissatisfactionAvg($pageUid): float
+    {
         $queryBuilder = $this->generateQueryBuilder();
         $queryBuilder->getRestrictions()->removeByType(DeletedRestriction::class);
 
@@ -337,7 +340,7 @@ class CommentRepository extends Repository
             ->from($this->tableName)
 
             ->where(
-                "uid_orig = ".$pageUid." and useful like '0'"
+                'uid_orig = ' . $pageUid . " and useful like '0'"
             );
         $total = $data
             ->executeQuery()
@@ -354,7 +357,7 @@ class CommentRepository extends Repository
             ->from($this->tableName)
 
             ->where(
-                "uid_orig = ".$pageUid." and useful like '0' and reason_code like '".$reason. "'"
+                'uid_orig = ' . $pageUid . " and useful like '0' and reason_code like '" . $reason . "'"
             );
         $reasonTotal = $data
             ->executeQuery()
@@ -365,7 +368,7 @@ class CommentRepository extends Repository
 
     /**
      * This function is used to get the total number of non-empty comments
-     * @param false $showForHiddenPages
+     * @param bool $showForHiddenPages
      * @return mixed
      */
     public function getTotalNonEmptyComment(bool $showForHiddenPages = false): mixed
@@ -375,11 +378,11 @@ class CommentRepository extends Repository
         $constraints['whereClause'] .= " AND trim($this->tableName.comment) <> ''";
         $joinMethod = $this->filter->getIncludeEmptyPages() ? 'rightJoin' : 'join';
         $queryBuilder = $this->generateQueryBuilder();
-        if($showForHiddenPages){
+        if ($showForHiddenPages) {
             $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         }
         return $queryBuilder
-            ->count($this->tableName.'.uid')
+            ->count($this->tableName . '.uid')
             ->from($this->tableName)
             ->$joinMethod(
                 $this->tableName,
@@ -400,7 +403,7 @@ class CommentRepository extends Repository
      */
     public function getPageIdsList(): array
     {
-      //  $this->filter = new Filter();
+        //  $this->filter = new Filter();
         $depth = $this->filter->getDepth();
         $page_ids = [];
         if ($depth > 0) {
@@ -420,18 +423,16 @@ class CommentRepository extends Repository
     {
         $page_ids = [];
         if ($depth > 0) {
-            /** @var PageTreeView $pageTree */
-            $pageTree = GeneralUtility::makeInstance(PageTreeView::class);
+            $pageTree = GeneralUtility::makeInstance(PageTreeIdCollector::class);
             $pageTree->init('AND ' . $GLOBALS['BE_USER']->getPagePermsClause(1));
-            $pageTree->makeHTML = 0;
+            $pageTree->makeHTML = false;
             $pageTree->addField('uid');
             $pageTree->getTree($this->root_id, $depth);
-            $page_ids = $pageTree->ids;
+            $page_ids = $pageTree->getCollectedIds();
         }
         array_unshift($page_ids, $this->root_id);
         return $page_ids;
     }
-
 
     /**
      * @param int $root_id

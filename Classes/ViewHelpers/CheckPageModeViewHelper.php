@@ -18,8 +18,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class CheckPageModeViewHelper extends AbstractViewHelper
 {
-
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('pageUid', 'int', 'Page uid', true);
     }
@@ -50,8 +49,7 @@ class CheckPageModeViewHelper extends AbstractViewHelper
         $currentMode = $data['tx_comments_form_mode'];
 
         if (in_array($currentMode, $enabledMode)
-            || in_array($currentMode, $disabledMode))
-        {
+            || in_array($currentMode, $disabledMode)) {
             return in_array($currentMode, $enabledMode);
         }
 
@@ -61,7 +59,8 @@ class CheckPageModeViewHelper extends AbstractViewHelper
             $data = BackendUtility::getRecord(
                 'pages',
                 $pageUid,
-                'uid,pid,tx_comments_form_mode');
+                'uid,pid,tx_comments_form_mode'
+            );
             $currentMode = $data['tx_comments_form_mode'];
             $pageUid = $data['pid'];
         }

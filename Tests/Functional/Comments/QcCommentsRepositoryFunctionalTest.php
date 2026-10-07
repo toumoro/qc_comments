@@ -15,16 +15,12 @@ declare(strict_types=1);
 
 namespace Qc\QcCommentsTest\Tests\Functional\Comments;
 
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception as DBALException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Qc\QcComments\Domain\Filter\Filter;
+use Qc\QcComments\Domain\Filter\CommentsFilter;
 use Qc\QcComments\Domain\Repository\CommentRepository;
-use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\Exception;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -32,26 +28,18 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
  */
 class QcCommentsRepositoryFunctionalTest extends FunctionalTestCase
 {
-    /**
-     * @var CommentRepository
-     */
     protected CommentRepository $commentRepository;
 
-    /**
-     * @var array<int,string>
-     */
-    protected $coreExtensionsToLoad = [
+    protected array $coreExtensionsToLoad = [
         'backend',
         'beuser',
         'fluid',
         'info',
         'install',
-        'core'
+        'core',
     ];
-    /**
-     * @var array<int, non-empty-string>
-     */
-    protected $testExtensionsToLoad = ['typo3conf/ext/qc_comments', 'typo3conf/ext/backend_module'];
+
+    protected array $testExtensionsToLoad = ['typo3conf/ext/qc_comments'];
 
     /**
      * @throws ContainerExceptionInterface
@@ -62,14 +50,8 @@ class QcCommentsRepositoryFunctionalTest extends FunctionalTestCase
     {
         parent::setUp();
         $GLOBALS['LANG'] = $this->getContainer()->get(LanguageServiceFactory::class)->create('default');
-        /** @var Typo3Version $versionInformation */
-        $versionInformation = GeneralUtility::makeInstance(Typo3Version::class);
-        if ($versionInformation->getMajorVersion() >= 11) {
-            $this->commentRepository = $this->getContainer()->get(CommentRepository::class);
-        } else {
-            $this->commentRepository = GeneralUtility::makeInstance(CommentRepository::class);
-        }
-        $filter = new Filter();
+        $this->commentRepository = $this->getContainer()->get(CommentRepository::class);
+        $filter = new CommentsFilter();
         $filter->setDepth(10);
         $filter->setDateRange('userDefined');
         $filter->setStartDate('2021-07-08 00:00:00');
@@ -83,35 +65,36 @@ class QcCommentsRepositoryFunctionalTest extends FunctionalTestCase
      */
     public function getComments(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/Comments/Comments.xml');
-        $row = $this->commentRepository->getComments([1, 2], true);
-        self::assertNotNull($row);
-        self::assertSame('Positif comment', $row[1][0]['comment']);
-        self::assertSame('2022-07-08 00:00:00', $row[1][0]['date_hour']);
-        self::assertSame(1, $row[1][0]['useful']);
-        self::assertSame('Page 1', $row[1][0]['title']);
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/Comments/Comments.csv');
+        $result = $this->commentRepository->getComments([1, 2], 100, 'DESC', true);
+        self::assertSame(2, $result['count']);
+        self::assertSame('Page 1', $result['rows'][1]['title']);
+        self::assertSame('Positif comment', $result['rows'][1]['records'][0]['comment']);
+        self::assertSame('2022-07-08 00:00:00', $result['rows'][1]['records'][0]['date_hour']);
+        self::assertSame('1', $result['rows'][1]['records'][0]['useful']);
     }
 
     /**
-    * @test
-    * @throws \TYPO3\TestingFramework\Core\Exception
-    */
+     * @test
+     * @throws \TYPO3\TestingFramework\Core\Exception
+     */
     public function getStatistics(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/Comments/Comments.xml');
-        $row = $this->commentRepository->getStatistics([1, 2], false);
-        self::assertNotNull($row);
-        $expectedData = [
-            [1, 'Page 1', ' 100 %', '1', 1, 0],
-            [2, 'Page 2', ' -100 %', '0', 1, 1]
-        ];
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/Comments/Comments.csv');
+        $rows = $this->commentRepository->getStatistics([1, 2], false);
+        self::assertCount(2, $rows);
 
-        foreach ($row as $key => $dataItem) {
-            $i = 0;
-            foreach ($dataItem as $item) {
-                self::assertSame($expectedData[$key][$i], $item);
-                $i++;
-            }
+        $byPageUid = [];
+        foreach ($rows as $row) {
+            $byPageUid[(int)$row['page_uid']] = $row;
         }
+
+        self::assertSame('Page 1', $byPageUid[1]['page_title']);
+        self::assertSame(1, (int)$byPageUid[1]['total']);
+        self::assertSame(1.0, (float)$byPageUid[1]['avg']);
+
+        self::assertSame('Page 2', $byPageUid[2]['page_title']);
+        self::assertSame(1, (int)$byPageUid[2]['total']);
+        self::assertSame(0.0, (float)$byPageUid[2]['avg']);
     }
 }

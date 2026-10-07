@@ -30,8 +30,7 @@ abstract class Filter implements Arrayable
 
     protected const KEY_USEFUL = 'useful';
 
-    protected string $tableName = "tx_qccomments_domain_model_comment";
-
+    protected string $tableName = 'tx_qccomments_domain_model_comment';
 
     /**
      * @var string
@@ -62,7 +61,6 @@ abstract class Filter implements Arrayable
      */
     public string $endDate = '';
 
-
     /**
      * @var int
      */
@@ -73,18 +71,16 @@ abstract class Filter implements Arrayable
      */
     public string $extKey;
 
-
-
-    const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
+    public const QC_LANG_FILE = 'LLL:EXT:qc_comments/Resources/Private/Language/locallang.xlf:';
 
     public function __construct(
         string $lang = '',
         string $startDate = '',
         string $endDate = '',
-        string $dateRange ='1 day',
+        string $dateRange = '1 day',
         int $depth = 1,
         bool $includeEmptyPages = false,
-        string $useful = ""
+        string $useful = ''
     ) {
         $this->lang = $lang;
         $this->startDate = $startDate;
@@ -137,7 +133,6 @@ abstract class Filter implements Arrayable
         $this->useful = $useful == '' ? '%' : $useful;
     }
 
-
     /**
      * @return string
      */
@@ -161,10 +156,10 @@ abstract class Filter implements Arrayable
         $criteria = '';
         switch ($this->lang) {
             case 'fr':
-                $criteria = "and ".$this->tableName.".sys_language_uid  = 0";
+                $criteria = 'and ' . $this->tableName . '.sys_language_uid  = 0';
                 break;
             case 'en':
-                $criteria = "and ".$this->tableName.".sys_language_uid  = 1";
+                $criteria = 'and ' . $this->tableName . '.sys_language_uid  = 1';
                 break;
         }
         return $criteria;
@@ -235,7 +230,7 @@ abstract class Filter implements Arrayable
             '1 year' => '1 ' . $this->localizationUtility
                     ->translate(self::QC_LANG_FILE . 'filter.dateRange.year'),
             'userDefined' =>  $this->localizationUtility
-                ->translate(self::QC_LANG_FILE . 'userDefined')
+                ->translate(self::QC_LANG_FILE . 'userDefined'),
         ];
     }
 
@@ -272,7 +267,7 @@ abstract class Filter implements Arrayable
     /**
      * @param string|null $startDate
      */
-    public function setStartDate(string $startDate = null): void
+    public function setStartDate(?string $startDate = null): void
     {
         $this->startDate = $startDate ?? '';
     }
@@ -283,7 +278,7 @@ abstract class Filter implements Arrayable
      */
     public function getEndDate(): string
     {
-        if($this->endDate != ''){
+        if ($this->endDate != '') {
             $date = new DateTime($this->endDate, new DateTimeZone('UTC'));
             return $date->format('Y-m-d');
         }
@@ -297,7 +292,7 @@ abstract class Filter implements Arrayable
      */
     public function getStartDate(): string
     {
-        if($this->startDate != ''){
+        if ($this->startDate != '') {
             $date = new DateTime($this->startDate, new DateTimeZone('UTC'));
             return $date->format('Y-m-d');
         }
@@ -308,11 +303,10 @@ abstract class Filter implements Arrayable
     /**
      * @param string|null $endDate
      */
-    public function setEndDate(string $endDate = null): void
+    public function setEndDate(?string $endDate = null): void
     {
         $this->endDate = $endDate ?? '';
     }
-
 
     /**
      * @return bool
@@ -359,19 +353,22 @@ abstract class Filter implements Arrayable
         return $criteria;
     }
 
-
     /**
      * This function is used to check for the useful field filter
      * @return string
      */
-    abstract public function getUsabilityCriteria():string;
+    abstract public function getUsabilityCriteria(): string;
 
     /**
      * This function is used to check if we display the deleted record or not
-     * @return bool
+     * @return string
      */
-    abstract public function getRecordVisibility():string;
+    abstract public function getRecordVisibility(): string;
 
+    /**
+     * @return string
+     */
+    abstract public function getCommentReason(): string;
 
     /**
      * @return array
@@ -379,13 +376,13 @@ abstract class Filter implements Arrayable
     public function toArray(): array
     {
         return [
-          self::KEY_LANG => $this->getLang() ?? '',
-          self::KEY_START_DATE => $this->getStartDate() ?? '',
-          self::KEY_END_DATE => $this->getEndDate()  ?? '',
-          self::KEY_DATE_RANGE => $this->getDateRange()  ?? '',
-          self::KEY_DEPTH => $this->getDepth()  ?? '',
-          self::KEY_INCLUDE_EMPTY_PAGES => $this->getIncludeEmptyPages() ?? false,
-          self::KEY_USEFUL => $this->getUseful() ?? '',
+            self::KEY_LANG => $this->getLang(),
+            self::KEY_START_DATE => $this->getStartDate(),
+            self::KEY_END_DATE => $this->getEndDate(),
+            self::KEY_DATE_RANGE => $this->getDateRange(),
+            self::KEY_DEPTH => $this->getDepth(),
+            self::KEY_INCLUDE_EMPTY_PAGES => $this->getIncludeEmptyPages(),
+            self::KEY_USEFUL => $this->getUseful(),
         ];
     }
 
@@ -394,5 +391,5 @@ abstract class Filter implements Arrayable
      * @param array $values
      * @return Filter
      */
-     public static function getInstanceFromArray(array $values){}
+    abstract public static function getInstanceFromArray(array $values): Filter;
 }

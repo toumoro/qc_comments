@@ -1,0 +1,9 @@
+"pages"
+"uid","pid","title","description","deleted"
+1,1,"Page 1","Page 1 description",0
+2,1,"Page 2","Page 2 Description",0
+
+"tx_qccomments_domain_model_comment"
+"uid","pid","useful","date_hour","comment","uid_orig","url_orig","theme","state_follow_up","note_follow_up"
+1,1,1,"2022-07-08 00:00:00","Positif comment",1,1,"Them 1",1,1
+2,1,0,"2022-07-08 00:00:00","Negatif comment",2,2,"Them 2",2,2

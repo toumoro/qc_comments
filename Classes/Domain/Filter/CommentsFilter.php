@@ -3,15 +3,13 @@
 namespace Qc\QcComments\Domain\Filter;
 
 use Qc\QcComments\Configuration\TyposcriptConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 class CommentsFilter extends Filter
 {
-    protected const KEY_INCLUDE_HIDDEN_COMMENTS= false;
+    protected const KEY_INCLUDE_HIDDEN_COMMENTS = false;
 
-    protected const KEY_COMMENT_REASON= "commentReason";
-
+    protected const KEY_COMMENT_REASON = 'commentReason';
 
     /**
      * @var bool
@@ -21,13 +19,12 @@ class CommentsFilter extends Filter
     /**
      * @var string
      */
-    protected string $commentReason = "%";
+    protected string $commentReason = '%';
 
     /**
      * @var TyposcriptConfiguration
      */
     protected TyposcriptConfiguration $typoscriptConfiguration;
-
 
     /**
      * @param string $lang
@@ -44,12 +41,12 @@ class CommentsFilter extends Filter
         string $lang = '',
         string $startDate = '',
         string $endDate = '',
-        string $dateRange ='1 day',
+        string $dateRange = '1 day',
         int $depth = 1,
         bool $includeEmptyPages = false,
         string $useful = '%',
         bool $includeHiddenComments = false,
-        string $commentReason = "%"
+        string $commentReason = '%'
     ) {
         parent::__construct(
             $lang,
@@ -90,8 +87,8 @@ class CommentsFilter extends Filter
         return array_merge(
             parent::toArray(),
             [
-                self::KEY_INCLUDE_HIDDEN_COMMENTS => $this->getIncludeHiddenComments() ?? false,
-                self::KEY_COMMENT_REASON => $this->getCommentReason() ?? "%"
+                self::KEY_INCLUDE_HIDDEN_COMMENTS => $this->getIncludeHiddenComments(),
+                self::KEY_COMMENT_REASON => $this->getCommentReason(),
             ]
         );
     }
@@ -112,10 +109,9 @@ class CommentsFilter extends Filter
             $values[parent::KEY_INCLUDE_EMPTY_PAGES],
             $values[parent::KEY_USEFUL],
             $values[self::KEY_INCLUDE_HIDDEN_COMMENTS] ?? false,
-            $values[self::KEY_COMMENT_REASON] ?? "%",
+            $values[self::KEY_COMMENT_REASON] ?? '%',
         );
     }
-
 
     /**
      * @return bool
@@ -150,13 +146,12 @@ class CommentsFilter extends Filter
     }
 
     /**
-     *
      * @param string $useful
      */
     public function setUseful(string $useful): void
     {
         //check if the useful filter changed to "Negative comment" we set default value for
-        if($useful == '0' && $useful != $this->getUseful()){
+        if ($useful == '0' && $useful != $this->getUseful()) {
             $this->setCommentReason('%');
         }
         $this->useful = $useful == '' ? '%' : $useful;
@@ -167,10 +162,10 @@ class CommentsFilter extends Filter
      */
     public function getUsabilityCriteria(): string
     {
-        $criteria =  " useful like '".$this->getUseful()."' and useful not like 'NA'";
+        $criteria =  " useful like '" . $this->getUseful() . "' and useful not like 'NA'";
         // we apply the reason only if the comment is negative or positive and the reason comment is selected
-        if($this->getCommentReason() != "%" && ($this->getUseful() == '0' || $this->getUseful() == '1')){
-            $criteria .= "AND reason_code like '".$this->getCommentReason()."'";
+        if ($this->getCommentReason() != '%' && ($this->getUseful() == '0' || $this->getUseful() == '1')) {
+            $criteria .= "AND reason_code like '" . $this->getCommentReason() . "'";
         }
         return $criteria;
     }
@@ -178,7 +173,8 @@ class CommentsFilter extends Filter
     /**
      * @return string
      */
-    public function getRecordVisibility() :string {
+    public function getRecordVisibility(): string
+    {
         return ' and hidden_comment = 0';
     }
 }

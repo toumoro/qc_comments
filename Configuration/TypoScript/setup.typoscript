@@ -197,6 +197,13 @@ plugin.tx_qccomments {
             secret =
         }
 
+        // Activate Cloudflare Turnstile (alternative to recaptcha, disabled by default)
+        turnstile {
+            enabled = {$qcComments.turnstile.enabled}
+            sitekey =
+            secret =
+        }
+
         spamshield {
             _enable = 1
             methods{
@@ -268,10 +275,16 @@ savePositifCommentAjax {
 
 page {
     includeJSLibs.jquery = https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js
-    includeJS.recaptcha = https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit
     includeJS.commentsForm = EXT:qc_comments/Resources/Public/JavaScript/CommentForm.js
     includeCSS.commentsFormCss = EXT:qc_comments/Resources/Public/Css/fe_qc_comments.css
 }
+
+# Mutually exclusive: only load the JS for whichever captcha provider is active.
+[{$qcComments.turnstile.enabled} == 1]
+    page.includeJS.turnstile = https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit
+[ELSE]
+    page.includeJS.recaptcha = https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit
+[END]
 
 module.tx_qccomments {
     persistence {

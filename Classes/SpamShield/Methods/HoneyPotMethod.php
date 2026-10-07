@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Methods;
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -25,11 +27,16 @@ class HoneyPotMethod extends AbstractMethod
      *
      * @return bool true if spam recognized
      */
-    public function spamCheck(Comment $comment = null): bool
+    public function spamCheck(?Comment $comment = null): bool
     {
-        $request ??= $GLOBALS['TYPO3_REQUEST'] ?? null;
-        $args = (array)$request->getParsedBody()['tx_qccomments_commentsform'] ?? null;
-        if($args === null) { return false; }
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        if ($request === null) {
+            return false;
+        }
+        $args = $request->getParsedBody()['tx_qccomments_commentsform'] ?? null;
+        if (!is_array($args)) {
+            return false;
+        }
 
         return !empty($args['field']['__hp']);
     }

@@ -23,22 +23,22 @@ return [
                 'resetFilter',
             ],
             StatisticsBEController::class => [
-                'statistics'
+                'statistics',
             ],
             CommentsBEController::class => [
                 'comments',
                 'deleteComment',
-                'hideComment'
+                'hideComment',
             ],
             HiddenCommentsBEController::class => [
                 'hiddenComments',
-                'deleteComment'
+                'deleteComment',
             ],
             TechnicalProblemsBEController::class => [
                 'technicalProblems',
                 'markProblemAsFixed',
-                'deleteTechnicalProblems'
-            ]
-        ]
+                'deleteTechnicalProblems',
+            ],
+        ],
     ],
 ];

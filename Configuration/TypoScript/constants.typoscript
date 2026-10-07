@@ -7,6 +7,9 @@ plugin.tx_qccomments {
     }
 }
 
+# Disabled by default; a site enables Turnstile by overriding this constant to 1
+qcComments.turnstile.enabled = 0
+
 module.tx_qc_comments {
     view {
         templateRootPath = EXT:tx_qccomments/Resources/Private/Templates/

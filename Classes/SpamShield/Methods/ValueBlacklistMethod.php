@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Methods;
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -14,7 +16,6 @@ namespace Qc\QcComments\SpamShield\Methods;
  ***/
 use Qc\QcComments\Domain\Model\Comment;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\Exception;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
@@ -31,9 +32,8 @@ class ValueBlacklistMethod extends AbstractMethod
      * Blacklist String Check: Check if a blacklisted word is in given values
      *
      * @return bool true if spam recognized
-     * @throws Exception
      */
-    public function spamCheck(Comment $comment = null): bool
+    public function spamCheck(?Comment $comment = null): bool
     {
         foreach ($this->getValues() as $blackword) {
             if ($this->isStringInString($comment->getComment(), $blackword)) {
@@ -47,7 +47,6 @@ class ValueBlacklistMethod extends AbstractMethod
      * Get blacklisted values
      *
      * @return array
-     * @throws Exception
      */
     protected function getValues(): array
     {
@@ -55,11 +54,11 @@ class ValueBlacklistMethod extends AbstractMethod
             $this->configuration['values']['_typoScriptNodeValue'],
             $this->configuration['values']
         );
-       return GeneralUtility::trimExplode (
-           $this->delimiter,
-           $this->reduceDelimiters($values),
-           true
-       );
+        return GeneralUtility::trimExplode(
+            $this->delimiter,
+            $this->reduceDelimiters($values),
+            true
+        );
     }
 
     /**
@@ -91,7 +90,8 @@ class ValueBlacklistMethod extends AbstractMethod
     {
         return preg_match(
             '/(?:\A|[@\s\b_-]|\.)' . $needle . '(?:$|[\s\b_-]|\.)/i',
-            $haystack) === 1;
+            $haystack
+        ) === 1;
     }
 
     /**

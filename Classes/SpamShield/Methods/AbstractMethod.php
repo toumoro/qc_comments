@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Qc\QcComments\SpamShield\Methods;
+
 /***
  *
  * This file is part of Qc Comments project.
@@ -19,7 +21,6 @@ use Qc\QcComments\Domain\Model\Comment;
  */
 abstract class AbstractMethod
 {
-
     /**
      * @var array
      */
@@ -45,7 +46,7 @@ abstract class AbstractMethod
      * @param array $settings
      * @param mixed $configuration
      */
-    public function __construct(Comment $comment, array $settings = [],  $configuration = [])
+    public function __construct(Comment $comment, array $settings = [], $configuration = [])
     {
         $this->comment = $comment;
         $this->settings = $settings;

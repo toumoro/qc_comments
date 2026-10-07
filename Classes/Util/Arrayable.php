@@ -12,6 +12,7 @@ declare(strict_types=1);
  *  (c) 2023 <techno@quebec.ca>
  *
  ***/
+
 namespace Qc\QcComments\Util;
 
 interface Arrayable
