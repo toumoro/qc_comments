@@ -244,6 +244,24 @@ plugin.tx_qccomments {
                         linkLimit = 2
                     }
                 }
+
+                # Turnstile check : server-side verification of the Turnstile token (only runs when turnstile.enabled = 1)
+                4 {
+                    _enable = 1
+                    name = Turnstile check
+                    # Class
+                    class = Qc\QcComments\SpamShield\Methods\TurnstileMethod
+                    indication = 10
+                }
+
+                # reCAPTCHA check : server-side verification of the reCAPTCHA v2 token (only runs when recaptcha.enabled = 1 and turnstile is not enabled)
+                5 {
+                    _enable = 1
+                    name = reCAPTCHA check
+                    # Class
+                    class = Qc\QcComments\SpamShield\Methods\RecaptchaMethod
+                    indication = 10
+                }
             }
         }
 
